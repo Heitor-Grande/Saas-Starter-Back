@@ -1,11 +1,19 @@
 import 'dotenv/config';
-import { decode, sign, verify, type JwtPayload } from 'jsonwebtoken';
+import { decode, sign, verify } from 'jsonwebtoken';
 
 const jwtSecret = process.env.JWT_SECRET as string;
 
 if (!jwtSecret) {
-  throw new Error('JWT_SECRET must be defined in the .env file.');
+  throw new Error('JWT_SECRET precisa ser definida no arquivo .env');
 }
+
+export type JwtPayload = {
+  usuarioid: number;
+  datalogin: string;
+  organizacaoid: number;
+  iat?: number;
+  exp?: number;
+};
 
 /**
  * Gera um JWT para autenticar um payload por um período determinado.
@@ -13,7 +21,10 @@ if (!jwtSecret) {
  * @param expiresInSeconds Tempo de validade do token em segundos.
  * @returns O JWT criado.
  */
-export function generateJwt(payload: object, expiresInSeconds: number): string {
+export function generateJwt(
+  payload: JwtPayload,
+  expiresInSeconds: number,
+): string {
   return sign(payload, jwtSecret, { expiresIn: expiresInSeconds });
 }
 
@@ -39,5 +50,7 @@ export function validateJwt(token: string): boolean {
 export function getJwtPayload(token: string): JwtPayload | null {
   const payload = decode(token);
 
-  return payload !== null && typeof payload === 'object' ? payload : null;
+  return payload !== null && typeof payload === 'object'
+    ? (payload as JwtPayload)
+    : null;
 }

@@ -2,9 +2,11 @@ import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
+import { PerfisModule } from './modules/perfis/perfis.module';
+import { PermissoesModule } from './modules/permissoes/permissoes.module';
 
 @Module({
-  imports: [],
+  imports: [PerfisModule, PermissoesModule],
   controllers: [AppController],
   providers: [AppService],
 })

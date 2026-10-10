@@ -2,11 +2,9 @@
 
 ## Visão geral
 
-O backend do SaaS Starter é uma base genérica e reutilizável para o desenvolvimento de aplicações SaaS, construída com **NestJS e TypeScript**.
+O SaaS Starter Backend é uma base genérica e reutilizável para aplicações SaaS, construída com NestJS e TypeScript.
 
-Seu objetivo é fornecer uma estrutura sólida, organizada e escalável, permitindo desenvolver diferentes produtos SaaS sem a necessidade de reconstruir a arquitetura a cada novo projeto.
-
-O backend não deve possuir regras de negócio específicas de um segmento, mantendo sua estrutura preparada para diferentes aplicações.
+O objetivo é oferecer uma estrutura simples, organizada e preparada para expansão sem adicionar camadas arquiteturais antes que elas sejam necessárias.
 
 ## Tecnologias
 
@@ -14,47 +12,47 @@ O backend não deve possuir regras de negócio específicas de um segmento, mant
 - NestJS
 - TypeScript
 - PostgreSQL
+- `pg`
+- Jest
 
 ## Arquitetura
 
-O projeto seguirá os princípios de **Domain-Driven Design (DDD)**, **Clean Architecture** e **Clean Code**.
+O projeto utiliza a organização modular padrão do NestJS.
 
-A arquitetura deverá priorizar a separação de responsabilidades, o baixo acoplamento e a independência das regras de negócio em relação às tecnologias utilizadas.
+Cada funcionalidade deve possuir seu próprio diretório em `src/modules/`, contendo Controller, Service, Module, DTOs e testes relevantes.
 
-O DDD será adotado como referência central, respeitando seus principais conceitos:
+```text
+modules/
+└── example/
+    ├── dto/
+    ├── example.controller.ts
+    ├── example.controller.spec.ts
+    ├── example.service.ts
+    ├── example.service.spec.ts
+    └── example.module.ts
+```
 
-- **Entities:** representam os objetos de domínio e suas regras de negócio.
-- **Value Objects:** representam conceitos de domínio definidos por seus valores e garantem suas invariantes.
-- **Use Cases:** coordenam as operações e os fluxos da aplicação.
-- **Domain Services:** encapsulam regras de domínio que não pertencem naturalmente a uma entidade ou Value Object.
-- **Repositories:** abstraem o acesso e a persistência dos dados.
-- **Aggregates:** organizam entidades e garantem a consistência das regras de negócio.
-
-A organização do código deverá respeitar os limites entre domínio, aplicação, infraestrutura e apresentação.
+- Controllers tratam requisições e respostas HTTP.
+- Services concentram validações, regras da funcionalidade e acesso aos dados.
+- Modules registram as dependências da funcionalidade.
+- DTOs definem os formatos de entrada e saída.
+- Recursos compartilhados permanecem em `src/shared/`.
 
 ## Princípios de desenvolvimento
 
-- Aplicar DDD de forma consistente.
-- Seguir os princípios de Clean Architecture e Clean Code.
-- Manter as regras de negócio independentes de frameworks e banco de dados.
+- Manter módulos independentes e com responsabilidades claras.
+- Utilizar injeção de dependências do NestJS.
 - Priorizar código legível, testável e de fácil manutenção.
-- Respeitar o princípio da responsabilidade única.
-- Evitar acoplamento entre módulos.
-- Utilizar injeção de dependências.
-- Priorizar reutilização sem criar abstrações desnecessárias.
-- Desenvolver funcionalidades com foco em evolução e escalabilidade.
+- Evitar abstrações e camadas sem necessidade real.
+- Utilizar consultas PostgreSQL parametrizadas.
 - Manter o backend independente do frontend.
 
 ## Organização e modularidade
 
-O backend será estruturado como um **monólito modular**, permitindo que diferentes funcionalidades sejam desenvolvidas e mantidas de maneira independente.
+Novas funcionalidades devem seguir o padrão NestJS já utilizado em `src/modules/permissoes/`.
 
-Cada módulo deverá possuir responsabilidades bem definidas e respeitar os princípios arquiteturais estabelecidos.
-
-A estrutura deverá facilitar a expansão do sistema sem comprometer a organização e a manutenção do código.
+As regras detalhadas de implementação, testes, segurança, migrations e utilities estão em `agents.md`.
 
 ## Objetivo final
 
-Construir uma fundação backend robusta, reutilizável e preparada para evolução, utilizando NestJS e TypeScript com uma arquitetura fiel aos conceitos de DDD.
-
-O resultado deverá permitir a criação de diferentes produtos SaaS, mantendo qualidade de código, organização arquitetural e facilidade de manutenção.
+Construir uma fundação backend modular, simples e reutilizável, permitindo a evolução de diferentes produtos SaaS sem comprometer a manutenção do projeto.

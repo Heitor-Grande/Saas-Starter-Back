@@ -1,7 +1,15 @@
 import { HttpStatus, Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { createApiResponse } from '../../util/api-response/api-response';
-import { validateJwt } from '../../util/jwt/jwt';
+import {
+  getJwtPayload,
+  validateJwt,
+  type JwtPayload,
+} from '../../util/jwt/jwt';
+
+export type JwtAuthenticatedRequest = Request & {
+  jwtPayload: JwtPayload;
+};
 
 @Injectable()
 export class JwtAuthMiddleware implements NestMiddleware {
@@ -30,6 +38,27 @@ export class JwtAuthMiddleware implements NestMiddleware {
         );
     }
 
+    const jwtPayload = getJwtPayload(token);
+    const usuarioId = jwtPayload?.usuarioid;
+
+    if (
+      !jwtPayload ||
+      typeof usuarioId !== 'number' ||
+      !Number.isInteger(usuarioId) ||
+      usuarioId <= 0
+    ) {
+      return response
+        .status(HttpStatus.UNAUTHORIZED)
+        .json(
+          createApiResponse(
+            'Usuário do token JWT inválido.',
+            HttpStatus.UNAUTHORIZED,
+            null,
+          ),
+        );
+    }
+
+    (request as JwtAuthenticatedRequest).jwtPayload = jwtPayload;
     next();
   }
 }
