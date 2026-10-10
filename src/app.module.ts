@@ -1,10 +1,20 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
 
 @Module({
   imports: [],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  /**
+   * Registra a validação JWT para proteger todas as rotas da aplicação.
+   * @param consumer Configurador de middlewares fornecido pelo NestJS.
+   * @returns Não retorna conteúdo; apenas configura o middleware.
+   */
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(JwtAuthMiddleware).forRoutes('*');
+  }
+}

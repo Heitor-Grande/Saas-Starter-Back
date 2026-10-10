@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-describe('AppController', () => {
+describe('Controller da aplicação', () => {
   let appController: AppController;
 
   beforeEach(async () => {
@@ -14,8 +14,8 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
+  describe('rota raiz', () => {
+    it('deve retornar "Hello World!"', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });

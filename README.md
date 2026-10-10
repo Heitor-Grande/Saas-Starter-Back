@@ -1,98 +1,60 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# SaaS Starter — Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Visão geral
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O backend do SaaS Starter é uma base genérica e reutilizável para o desenvolvimento de aplicações SaaS, construída com **NestJS e TypeScript**.
 
-## Description
+Seu objetivo é fornecer uma estrutura sólida, organizada e escalável, permitindo desenvolver diferentes produtos SaaS sem a necessidade de reconstruir a arquitetura a cada novo projeto.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+O backend não deve possuir regras de negócio específicas de um segmento, mantendo sua estrutura preparada para diferentes aplicações.
 
-## Project setup
+## Tecnologias
 
-```bash
-$ npm install
-```
+- Node.js
+- NestJS
+- TypeScript
+- PostgreSQL
 
-## Compile and run the project
+## Arquitetura
 
-```bash
-# development
-$ npm run start
+O projeto seguirá os princípios de **Domain-Driven Design (DDD)**, **Clean Architecture** e **Clean Code**.
 
-# watch mode
-$ npm run start:dev
+A arquitetura deverá priorizar a separação de responsabilidades, o baixo acoplamento e a independência das regras de negócio em relação às tecnologias utilizadas.
 
-# production mode
-$ npm run start:prod
-```
+O DDD será adotado como referência central, respeitando seus principais conceitos:
 
-## Run tests
+- **Entities:** representam os objetos de domínio e suas regras de negócio.
+- **Value Objects:** representam conceitos de domínio definidos por seus valores e garantem suas invariantes.
+- **Use Cases:** coordenam as operações e os fluxos da aplicação.
+- **Domain Services:** encapsulam regras de domínio que não pertencem naturalmente a uma entidade ou Value Object.
+- **Repositories:** abstraem o acesso e a persistência dos dados.
+- **Aggregates:** organizam entidades e garantem a consistência das regras de negócio.
 
-```bash
-# unit tests
-$ npm run test
+A organização do código deverá respeitar os limites entre domínio, aplicação, infraestrutura e apresentação.
 
-# e2e tests
-$ npm run test:e2e
+## Princípios de desenvolvimento
 
-# test coverage
-$ npm run test:cov
-```
+- Aplicar DDD de forma consistente.
+- Seguir os princípios de Clean Architecture e Clean Code.
+- Manter as regras de negócio independentes de frameworks e banco de dados.
+- Priorizar código legível, testável e de fácil manutenção.
+- Respeitar o princípio da responsabilidade única.
+- Evitar acoplamento entre módulos.
+- Utilizar injeção de dependências.
+- Priorizar reutilização sem criar abstrações desnecessárias.
+- Desenvolver funcionalidades com foco em evolução e escalabilidade.
+- Manter o backend independente do frontend.
 
-## Deployment
+## Organização e modularidade
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+O backend será estruturado como um **monólito modular**, permitindo que diferentes funcionalidades sejam desenvolvidas e mantidas de maneira independente.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Cada módulo deverá possuir responsabilidades bem definidas e respeitar os princípios arquiteturais estabelecidos.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+A estrutura deverá facilitar a expansão do sistema sem comprometer a organização e a manutenção do código.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Objetivo final
 
-## Resources
+Construir uma fundação backend robusta, reutilizável e preparada para evolução, utilizando NestJS e TypeScript com uma arquitetura fiel aos conceitos de DDD.
 
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+O resultado deverá permitir a criação de diferentes produtos SaaS, mantendo qualidade de código, organização arquitetural e facilidade de manutenção.
