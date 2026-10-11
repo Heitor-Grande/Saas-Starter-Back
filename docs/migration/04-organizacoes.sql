@@ -12,8 +12,8 @@ CREATE TABLE organizacoes (
     cidade VARCHAR(50) NOT NULL,
     estado VARCHAR(2) NOT NULL,
     datacriacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    criadoporusuarioid INTEGER NOT NULL,
-    atualizadoem TIMESTAMP NOT NULL,
-    atualizadoporusuarioid INTEGER NOT NULL,
+    criadoporusuarioid INTEGER,
+    atualizadoem TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizadoporusuarioid INTEGER,
     CONSTRAINT organizacoes_cnpj_unique UNIQUE (cnpj)
 );

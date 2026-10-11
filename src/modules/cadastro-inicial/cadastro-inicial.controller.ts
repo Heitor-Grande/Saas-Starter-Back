@@ -52,6 +52,7 @@ export class CadastroInicialController {
           .json(createApiResponse(error.message, HttpStatus.BAD_REQUEST, null));
       }
 
+      console.log(error);
       return response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json(

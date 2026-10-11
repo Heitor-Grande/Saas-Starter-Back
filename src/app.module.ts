@@ -25,7 +25,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer
       .apply(JwtAuthMiddleware)
-      .exclude({ path: 'cadastro-inicial/create', method: RequestMethod.POST })
+      .exclude(
+        { path: 'cadastro-inicial/create', method: RequestMethod.POST },
+        { path: '/', method: RequestMethod.GET },
+      )
       .forRoutes('*');
   }
 }

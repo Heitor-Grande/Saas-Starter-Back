@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
 import { generateHash } from '../../util/bcrypt/bcrypt';
+import { criarLog } from '../../util/criar-log/criar-log';
 import { validarForcaSenha } from '../../util/validar-forca-senha/validar-forca-senha';
 import type {
   CadastroInicialDto,
@@ -28,7 +29,6 @@ export class CadastroInicialService {
 
     try {
       await client.query('BEGIN');
-      await client.query('SET CONSTRAINTS ALL DEFERRED');
 
       const organizacaoResult =
         await client.query<CadastroInicialOrganizacaoDto>(
@@ -50,7 +50,7 @@ export class CadastroInicialService {
             atualizadoporusuarioid
           ) VALUES (
             $1, $2, $3, NULL, $4, $5, $6, $7, $8, $9, $10,
-            CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP, 0
+            CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP, NULL
           )
           RETURNING
             id,
@@ -124,7 +124,7 @@ export class CadastroInicialService {
           usuario.email,
           usuario.telefone,
           organizacaoCriada.id,
-          usuario.perfilid,
+          3, // Perfil padrao de usuario responsavel
           usuario.cargo,
           usuario.ativo,
           senhaHash.hash,
@@ -161,6 +161,20 @@ export class CadastroInicialService {
             atualizadoporusuarioid`,
           [usuarioCriado.id, organizacaoCriada.id],
         );
+
+      await criarLog(
+        {
+          organizacaoid: organizacaoCriada.id,
+          feitoporusuarioid: usuarioCriado.id,
+          feitoem: new Date(),
+          acao: 'post',
+          depois: {
+            organizacao: organizacaoAtualizadaResult.rows[0],
+            usuario: usuarioCriado,
+          },
+        },
+        client,
+      );
 
       await client.query('COMMIT');
 
@@ -215,7 +229,7 @@ export class CadastroInicialService {
     }
 
     if (!Number.isInteger(dados.planoid) || dados.planoid <= 0) {
-      throw new BadRequestException('O plano informado e invalido.');
+      throw new BadRequestException('O plano informado é invalido.');
     }
 
     if (dados.cep.length !== 8) {
@@ -304,15 +318,11 @@ export class CadastroInicialService {
       dados.email.length > 100 ||
       !dados.email.includes('@')
     ) {
-      throw new BadRequestException('O e-mail informado e invalido.');
+      throw new BadRequestException('O e-mail informado é invalido.');
     }
 
     if (dados.telefone.length < 10 || dados.telefone.length > 11) {
       throw new BadRequestException('O telefone deve conter 10 ou 11 digitos.');
-    }
-
-    if (!Number.isInteger(dados.perfilid) || dados.perfilid <= 0) {
-      throw new BadRequestException('O perfil informado e invalido.');
     }
 
     if (dados.cargo.length > 100) {
@@ -322,7 +332,7 @@ export class CadastroInicialService {
     }
 
     if (typeof dados.ativo !== 'boolean') {
-      throw new BadRequestException('O status do usuario e invalido.');
+      throw new BadRequestException('O status do usuario é invalido.');
     }
 
     if (!validarForcaSenha(usuario?.senha)) {

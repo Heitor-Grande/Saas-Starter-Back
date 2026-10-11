@@ -9,7 +9,7 @@ CREATE TABLE usuarios (
     organizacaoid INTEGER NOT NULL,
     perfilid INTEGER NOT NULL,
     cargo VARCHAR(100),
-    ativo BOOLEAN NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
     senhahash VARCHAR(255) NOT NULL,
     saltroundsenha INTEGER NOT NULL,
     datacriacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

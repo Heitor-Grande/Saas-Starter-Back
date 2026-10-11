@@ -30,7 +30,7 @@ describe('Servico de cadastro inicial', () => {
       datanascimento: '1990-01-01',
       email: 'MARIA@EXAMPLE.COM',
       telefone: '(11) 99999-9999',
-      perfilid: 1,
+      perfilid: 3,
       cargo: 'Administradora',
       ativo: true,
       senha: 'Senha-segura1!',
@@ -56,9 +56,9 @@ describe('Servico de cadastro inicial', () => {
       cidade: 'Sao Paulo',
       estado: 'SP',
       datacriacao: new Date(),
-      criadoporusuarioid: 0,
+      criadoporusuarioid: null,
       atualizadoem: new Date(),
-      atualizadoporusuarioid: 0,
+      atualizadoporusuarioid: null,
     } as unknown as CadastroInicialOrganizacaoDto;
     const usuarioCriado: CadastroInicialUsuarioDto = {
       id: 20,
@@ -69,7 +69,7 @@ describe('Servico de cadastro inicial', () => {
       email: 'maria@example.com',
       telefone: '11999999999',
       organizacaoid: 10,
-      perfilid: 1,
+      perfilid: 3,
       cargo: 'Administradora',
       ativo: true,
       datacriacao: new Date(),
@@ -83,10 +83,10 @@ describe('Servico de cadastro inicial', () => {
     const query = jest
       .fn()
       .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({ rows: [organizacaoCriada] })
       .mockResolvedValueOnce({ rows: [usuarioCriado] })
       .mockResolvedValueOnce({ rows: [organizacaoAtualizada] })
+      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({});
     const release = jest.fn();
     const connect = jest.spyOn(
@@ -107,14 +107,13 @@ describe('Servico de cadastro inicial', () => {
       usuario: usuarioCriado,
     });
     expect(query).toHaveBeenNthCalledWith(1, 'BEGIN');
-    expect(query).toHaveBeenNthCalledWith(2, 'SET CONSTRAINTS ALL DEFERRED');
     expect(query).toHaveBeenNthCalledWith(
-      3,
+      2,
       expect.any(String),
       expect.arrayContaining(['Acme SaaS', '12345678000190', 1]),
     );
     expect(query).toHaveBeenNthCalledWith(
-      4,
+      3,
       expect.any(String),
       expect.arrayContaining([
         'Maria Silva',
@@ -124,14 +123,19 @@ describe('Servico de cadastro inicial', () => {
         'maria@example.com',
         '11999999999',
         10,
-        1,
+        3,
         'Administradora',
         true,
         'hash-da-senha',
         10,
       ]),
     );
-    expect(query).toHaveBeenNthCalledWith(5, expect.any(String), [20, 10]);
+    expect(query).toHaveBeenNthCalledWith(4, expect.any(String), [20, 10]);
+    expect(query).toHaveBeenNthCalledWith(
+      5,
+      expect.any(String),
+      expect.any(Array),
+    );
     expect(query).toHaveBeenNthCalledWith(6, 'COMMIT');
     expect(release).toHaveBeenCalledTimes(1);
   });
@@ -151,7 +155,7 @@ describe('Servico de cadastro inicial', () => {
     const query = jest
       .fn()
       .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ rows: [{ id: 10 }] })
       .mockRejectedValueOnce({ code: '23505' })
       .mockResolvedValueOnce({});
     const release = jest.fn();

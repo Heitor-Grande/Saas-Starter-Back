@@ -65,6 +65,7 @@ src/
 - Todo novo util deve possuir uma pasta própria dentro de `src/util/`, com o mesmo nome do util.
 - A pasta deve conter o arquivo de implementação `.ts` e seu arquivo de teste `.spec.ts`.
 - Exemplo: `src/util/jwt/jwt.ts` e `src/util/jwt/jwt.spec.ts`.
+- Utilize sempre `src/util/criar-log/criar-log.ts` para registrar ações que alterem dados no banco.
 
 ## Banco de dados
 
