@@ -1,12 +1,18 @@
-import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  RequestMethod,
+  type NestModule,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
+import { CadastroInicialModule } from './modules/cadastro-inicial/cadastro-inicial.module';
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
 
 @Module({
-  imports: [PerfisModule, PermissoesModule],
+  imports: [CadastroInicialModule, PerfisModule, PermissoesModule],
   controllers: [AppController],
   providers: [AppService],
 })
@@ -17,6 +23,9 @@ export class AppModule implements NestModule {
    * @returns Não retorna conteúdo; apenas configura o middleware.
    */
   configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(JwtAuthMiddleware).forRoutes('*');
+    consumer
+      .apply(JwtAuthMiddleware)
+      .exclude({ path: 'cadastro-inicial/create', method: RequestMethod.POST })
+      .forRoutes('*');
   }
 }

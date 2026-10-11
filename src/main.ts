@@ -9,6 +9,7 @@ import { connectDatabase } from './shared/infrastructure/database/postgres/postg
 async function bootstrap(): Promise<void> {
   await connectDatabase();
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   await app.listen(process.env.PORT ?? 3000);
 }
 
