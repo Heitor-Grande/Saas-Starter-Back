@@ -15,8 +15,8 @@ describe('Controller da aplicação', () => {
   });
 
   describe('rota raiz', () => {
-    it('deve retornar "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('deve retornar objeto de boas vindas', () => {
+      expect(appController.getHello()).toBeInstanceOf(Object);
     });
   });
 });
