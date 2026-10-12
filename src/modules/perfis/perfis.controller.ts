@@ -45,12 +45,16 @@ export class PerfisController {
   ): Promise<Response> {
     try {
       const usuarioId = request.jwtPayload.usuarioid;
-      await this.perfisService.create(body, usuarioId);
+      const perfil = await this.perfisService.create(body, usuarioId);
 
       return response
         .status(HttpStatus.CREATED)
         .json(
-          createApiResponse('Perfil criado com sucesso.', HttpStatus.CREATED),
+          createApiResponse(
+            'Perfil criado com sucesso.',
+            HttpStatus.CREATED,
+            perfil,
+          ),
         );
     } catch (error) {
       if (error instanceof BadRequestException) {

@@ -6,8 +6,16 @@ import {
 } from '@nestjs/common';
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
 import type { AssociatePermissoesDto } from './dto/associate-permissoes.dto';
-import type { CreatePerfilDto, PerfilDto } from './dto/create-perfil.dto';
+import type {
+  CreatePerfilDto,
+  PerfilDetalhadoDto,
+  PerfilDto,
+} from './dto/create-perfil.dto';
 import type { UpdatePerfilDto } from './dto/update-perfil.dto';
+
+type PerfilPermissaoRow = {
+  permissaoid: number;
+};
 
 @Injectable()
 export class PerfisService {
@@ -61,7 +69,7 @@ export class PerfisService {
    * @param id Identificador do perfil que será consultado.
    * @returns Os dados do perfil encontrado.
    */
-  async findOne(id: number): Promise<PerfilDto> {
+  async findOne(id: number): Promise<PerfilDetalhadoDto> {
     if (!Number.isInteger(id) || id <= 0) {
       throw new BadRequestException('O perfil informado é inválido.');
     }
@@ -85,7 +93,20 @@ export class PerfisService {
       throw new NotFoundException('Perfil não encontrado.');
     }
 
-    return perfil;
+    const permissoesResult = await postgresPool.query<PerfilPermissaoRow>(
+      `SELECT permissaoid
+      FROM perfil_permissao
+      WHERE perfilid = $1
+      ORDER BY permissaoid`,
+      [id],
+    );
+
+    return {
+      ...perfil,
+      permissoesids: permissoesResult.rows.map(
+        (permissao) => permissao.permissaoid,
+      ),
+    };
   }
 
   /**

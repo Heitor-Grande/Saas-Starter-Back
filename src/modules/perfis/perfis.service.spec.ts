@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
-import type { PerfilDto } from './dto/create-perfil.dto';
+import type { PerfilDetalhadoDto, PerfilDto } from './dto/create-perfil.dto';
 import { PerfisService } from './perfis.service';
 
 describe('Serviço de perfis', () => {
@@ -62,17 +62,25 @@ describe('Serviço de perfis', () => {
       atualizadoporusuarioid: 1,
       atualizadoem: new Date(),
     };
+    const perfilDetalhado: PerfilDetalhadoDto = {
+      ...perfil,
+      permissoesids: [2, 4],
+    };
     const query = jest.spyOn(
       postgresPool,
       'query',
     ) as unknown as jest.MockedFunction<
-      (query: string, values: unknown[]) => Promise<{ rows: PerfilDto[] }>
+      (query: string, values: unknown[]) => Promise<{ rows: unknown[] }>
     >;
-    query.mockResolvedValue({ rows: [perfil] });
+    query.mockResolvedValueOnce({ rows: [perfil] }).mockResolvedValueOnce({
+      rows: [{ permissaoid: 2 }, { permissaoid: 4 }],
+    });
     const service = new PerfisService();
 
-    await expect(service.findOne(10)).resolves.toEqual(perfil);
-    expect(query).toHaveBeenCalledWith(expect.any(String), [10]);
+    await expect(service.findOne(10)).resolves.toEqual(perfilDetalhado);
+    expect(query).toHaveBeenCalledTimes(2);
+    expect(query).toHaveBeenNthCalledWith(1, expect.any(String), [10]);
+    expect(query).toHaveBeenNthCalledWith(2, expect.any(String), [10]);
   });
 
   it('deve informar quando o perfil não for encontrado', async () => {

@@ -12,3 +12,7 @@ export type PerfilDto = {
   atualizadoporusuarioid: number;
   atualizadoem: Date;
 };
+
+export type PerfilDetalhadoDto = PerfilDto & {
+  permissoesids: number[];
+};

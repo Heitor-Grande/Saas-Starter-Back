@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
-import type { PerfilDto } from './dto/create-perfil.dto';
+import type { PerfilDetalhadoDto, PerfilDto } from './dto/create-perfil.dto';
 import { PerfisController } from './perfis.controller';
 import { PerfisService } from './perfis.service';
 
@@ -49,11 +49,12 @@ describe('Controller de perfis', () => {
     expect(json).toHaveBeenCalledWith({
       statusCode: 201,
       message: 'Perfil criado com sucesso.',
+      data: perfil,
     });
   });
 
   it('deve consultar um perfil pelo identificador', async () => {
-    const perfil: PerfilDto = {
+    const perfil: PerfilDetalhadoDto = {
       id: 10,
       nome: 'Administrador',
       descricao: 'Acesso administrativo',
@@ -61,6 +62,7 @@ describe('Controller de perfis', () => {
       datacriacao: new Date(),
       atualizadoporusuarioid: 1,
       atualizadoem: new Date(),
+      permissoesids: [2, 4],
     };
     const findOne = jest.fn().mockResolvedValue(perfil);
     const controller = new PerfisController({
