@@ -47,7 +47,7 @@ describe('Servico de login', () => {
         usuarioid: 10,
         organizacaoid: 20,
       }),
-      Number(process.env.JWT_EXPIRES_IN_SECONDS ?? 3600),
+      Number(process.env.JWT_EXPIRES_IN_SECONDS),
     );
   });
 

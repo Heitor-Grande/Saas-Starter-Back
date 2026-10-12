@@ -12,6 +12,14 @@ jobs:
     name: Build and Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_PORT: "5432"
+      DATABASE_USER: test
+      DATABASE_PASSWORD: test
+      DATABASE_NAME: saas_starter_test
+      JWT_SECRET: jwt-secret-exclusivo-para-testes
+      JWT_EXPIRES_IN_SECONDS: "3600"
 
     steps:
       - name: Checkout repository
