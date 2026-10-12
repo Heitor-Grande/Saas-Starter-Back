@@ -31,12 +31,6 @@ export class LoginService {
       throw new BadRequestException('A senha deve ser informada.');
     }
 
-    if (process.env.JWT_EXPIRES_IN_SECONDS === undefined) {
-      throw new BadRequestException(`
-        A variável de ambiente JWT_EXPIRES_IN_SECONDS não está definida.
-        `);
-    }
-
     const result = await postgresPool.query<LoginUsuarioDto>(
       `SELECT
         id,
@@ -61,7 +55,7 @@ export class LoginService {
         datalogin: new Date().toISOString(),
         organizacaoid: usuario.organizacaoid,
       },
-      Number(process.env.JWT_EXPIRES_IN_SECONDS),
+      Number(process.env.JWT_EXPIRES_IN_SECONDS ?? 3600),
     );
 
     return { token };
