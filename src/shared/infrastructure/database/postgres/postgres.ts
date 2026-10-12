@@ -1,6 +1,18 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 
+if (
+  process.env.DATABASE_HOST === undefined ||
+  process.env.DATABASE_PORT === undefined ||
+  process.env.DATABASE_USER === undefined ||
+  process.env.DATABASE_PASSWORD === undefined ||
+  process.env.DATABASE_NAME === undefined
+) {
+  throw new Error(
+    `As variáveis de ambiente DATABASE_HOST, DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD e DATABASE_NAME devem estar definidas.`,
+  );
+}
+
 export const postgresPool = new Pool({
   host: process.env.DATABASE_HOST,
   port: Number(process.env.DATABASE_PORT ?? 5432),

@@ -21,9 +21,14 @@ export class CadastroInicialService {
     const organizacao = this.validarOrganizacao(dto.organizacao);
     const usuario = this.validarUsuario(dto.usuario);
     const senha = dto.usuario?.senha;
+    if (process.env.BCRYPT_SALT_ROUNDS === undefined) {
+      throw new BadRequestException(
+        `A variavel de ambiente BCRYPT_SALT_ROUNDS não está definida.`,
+      );
+    }
     const senhaHash = generateHash(
       senha,
-      Number(process.env.BCRYPT_SALT_ROUNDS ?? 10),
+      Number(process.env.BCRYPT_SALT_ROUNDS),
     );
     const client = await postgresPool.connect();
 

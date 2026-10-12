@@ -91,6 +91,7 @@ As migrations ficam em `docs/migration/`.
 
 ## APIs e Controllers
 
+- As mensagens de erro e sucesso devem estar em português correto, com ortografia, acentuação e concordância adequadas.
 - Utilize Controllers do NestJS para endpoints REST.
 - Valide todos os dados recebidos.
 - Utilize códigos HTTP apropriados.
