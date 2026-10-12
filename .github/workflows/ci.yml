@@ -20,6 +20,7 @@ jobs:
       DATABASE_NAME: saas_starter_test
       JWT_SECRET: jwt-secret-exclusivo-para-testes
       JWT_EXPIRES_IN_SECONDS: "3600"
+      BCRYPT_SALT_ROUNDS: "10"
 
     steps:
       - name: Checkout repository
