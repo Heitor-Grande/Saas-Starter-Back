@@ -11,14 +11,17 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import type { CreatePermissaoDto } from './dto/create-permissao.dto';
 import type { UpdatePermissaoDto } from './dto/update-permissao.dto';
 import { PermissoesService } from './permissoes.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizaPermissões')
 @Controller('permissoes')
 export class PermissoesController {
   /**
@@ -35,6 +38,7 @@ export class PermissoesController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a permissão criada ou o erro encontrado.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'CriaPermissao')
   @Post('/create')
   async create(
     @Body() body: CreatePermissaoDto,
@@ -160,6 +164,7 @@ export class PermissoesController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a confirmação da atualização ou o erro.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaPermissao')
   @Put('/update/:id')
   async update(
     @Param('id') id: string,
@@ -210,6 +215,7 @@ export class PermissoesController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a confirmação da exclusão ou o erro.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'DeletaPermissao')
   @Delete('/remove/:id')
   async remove(
     @Param('id') id: string,

@@ -12,8 +12,10 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import type { AssociatePermissoesDto } from './dto/associate-permissoes.dto';
@@ -21,6 +23,7 @@ import type { CreatePerfilDto } from './dto/create-perfil.dto';
 import type { UpdatePerfilDto } from './dto/update-perfil.dto';
 import { PerfisService } from './perfis.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizaPerfis')
 @Controller('perfis')
 export class PerfisController {
   /**
@@ -37,6 +40,7 @@ export class PerfisController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com o resultado ou o erro encontrado.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'CriaPerfil')
   @Post('/create')
   async create(
     @Body() body: CreatePerfilDto,
@@ -163,6 +167,7 @@ export class PerfisController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a confirmação da atualização ou o erro.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaPerfil')
   @Put('/update/:id')
   async update(
     @Param('id') id: string,
@@ -213,6 +218,7 @@ export class PerfisController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a confirmação da exclusão ou o erro.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'DeletaPerfil')
   @Delete('/remove/:id')
   async remove(
     @Param('id') id: string,
@@ -263,6 +269,7 @@ export class PerfisController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com o resultado ou o erro encontrado.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaPerfil')
   @Post('/associate-permissions/:perfilId')
   async associatePermissions(
     @Param('perfilId') perfilId: string,
@@ -311,6 +318,7 @@ export class PerfisController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com o resultado ou o erro encontrado.
    */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaPerfil')
   @Delete('/remove-permission/:perfilId/permissoes/:permissaoId')
   async removePermissions(
     @Param('perfilId') perfilId: string,

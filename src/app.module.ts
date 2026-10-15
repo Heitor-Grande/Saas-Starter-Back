@@ -4,8 +4,10 @@ import {
   RequestMethod,
   type NestModule,
 } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { PermissaoGuard } from './guards/permissao/permissao.guard';
 import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
 import { CadastroInicialModule } from './modules/cadastro-inicial/cadastro-inicial.module';
 import { CarregaPermissoesUsuarioModule } from './modules/carrega-permissoes-usuario/carrega-permissoes-usuario.module';
@@ -22,7 +24,13 @@ import { PermissoesModule } from './modules/permissoes/permissoes.module';
     PermissoesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: PermissaoGuard,
+    },
+  ],
 })
 export class AppModule implements NestModule {
   /**
