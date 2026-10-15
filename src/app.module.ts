@@ -8,12 +8,19 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
 import { CadastroInicialModule } from './modules/cadastro-inicial/cadastro-inicial.module';
+import { CarregaPermissoesUsuarioModule } from './modules/carrega-permissoes-usuario/carrega-permissoes-usuario.module';
 import { LoginModule } from './modules/login/login.module';
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
 
 @Module({
-  imports: [CadastroInicialModule, LoginModule, PerfisModule, PermissoesModule],
+  imports: [
+    CadastroInicialModule,
+    CarregaPermissoesUsuarioModule,
+    LoginModule,
+    PerfisModule,
+    PermissoesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
