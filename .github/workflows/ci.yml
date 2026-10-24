@@ -21,7 +21,8 @@ jobs:
       JWT_SECRET: jwt-secret-exclusivo-para-testes
       JWT_EXPIRES_IN_SECONDS: "3600"
       BCRYPT_SALT_ROUNDS: "10"
-
+      RATE_LIMIT_WINDOW_MS: "60000"
+      RATE_LIMIT_MAX: "15"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
