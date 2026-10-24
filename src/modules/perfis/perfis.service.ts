@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { criarLog } from '../../util/criar-log/criar-log';
+import { executarEmTransacao } from '../../util/executar-em-transacao/executar-em-transacao';
 import type { AssociatePermissoesDto } from './dto/associate-permissoes.dto';
 import type {
   CreatePerfilDto,
@@ -20,12 +22,17 @@ type PerfilPermissaoRow = {
 @Injectable()
 export class PerfisService {
   /**
-   * Valida e persiste um novo perfil vinculado ao usuário autenticado.
+   * Valida, persiste e audita um novo perfil.
    * @param dto Nome e descrição do perfil.
    * @param usuarioId Identificador do usuário responsável pela criação.
+   * @param organizacaoId Identificador da organização do usuário autenticado.
    * @returns Os dados do perfil criado no PostgreSQL.
    */
-  async create(dto: CreatePerfilDto, usuarioId: number): Promise<PerfilDto> {
+  async create(
+    dto: CreatePerfilDto,
+    usuarioId: number,
+    organizacaoId: number,
+  ): Promise<PerfilDto> {
     const nome = dto.nome?.trim();
     const descricao = dto.descricao?.trim();
 
@@ -41,27 +48,41 @@ export class PerfisService {
       );
     }
 
-    const result = await postgresPool.query<PerfilDto>(
-      `INSERT INTO perfis (
-        nome,
-        descricao,
-        criadoporusuarioid,
-        datacriacao,
-        atualizadoporusuarioid,
-        atualizadoem
-      ) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $3, CURRENT_TIMESTAMP)
-      RETURNING
-        id,
-        nome,
-        descricao,
-        criadoporusuarioid,
-        datacriacao,
-        atualizadoporusuarioid,
-        atualizadoem`,
-      [nome, descricao, usuarioId],
-    );
+    return executarEmTransacao(async (client) => {
+      const result = await client.query<PerfilDto>(
+        `INSERT INTO perfis (
+          nome,
+          descricao,
+          criadoporusuarioid,
+          datacriacao,
+          atualizadoporusuarioid,
+          atualizadoem
+        ) VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $3, CURRENT_TIMESTAMP)
+        RETURNING
+          id,
+          nome,
+          descricao,
+          criadoporusuarioid,
+          datacriacao,
+          atualizadoporusuarioid,
+          atualizadoem`,
+        [nome, descricao, usuarioId],
+      );
+      const perfil = result.rows[0];
 
-    return result.rows[0];
+      await criarLog(
+        {
+          organizacaoid: organizacaoId,
+          feitoporusuarioid: usuarioId,
+          feitoem: new Date(),
+          acao: 'post',
+          depois: perfil,
+        },
+        client,
+      );
+
+      return perfil;
+    });
   }
 
   /**
@@ -89,9 +110,7 @@ export class PerfisService {
     );
     const perfil = result.rows[0];
 
-    if (!perfil) {
-      throw new NotFoundException('Perfil não encontrado.');
-    }
+    if (!perfil) throw new NotFoundException('Perfil não encontrado.');
 
     const permissoesResult = await postgresPool.query<PerfilPermissaoRow>(
       `SELECT permissaoid
@@ -131,16 +150,18 @@ export class PerfisService {
   }
 
   /**
-   * Atualiza os dados de um perfil e registra o usuário responsável.
+   * Atualiza e audita os dados de um perfil.
    * @param id Identificador do perfil que será atualizado.
    * @param dto Nome e descrição atualizados do perfil.
    * @param usuarioId Identificador do usuário responsável pela atualização.
+   * @param organizacaoId Identificador da organização do usuário autenticado.
    * @returns Os dados atualizados do perfil.
    */
   async update(
     id: number,
     dto: UpdatePerfilDto,
     usuarioId: number,
+    organizacaoId: number,
   ): Promise<PerfilDto> {
     if (!Number.isInteger(id) || id <= 0) {
       throw new BadRequestException('O perfil informado é inválido.');
@@ -161,47 +182,76 @@ export class PerfisService {
       );
     }
 
-    const result = await postgresPool.query<PerfilDto>(
-      `UPDATE perfis
-      SET
-        nome = $1,
-        descricao = $2,
-        atualizadoporusuarioid = $3,
-        atualizadoem = CURRENT_TIMESTAMP
-      WHERE id = $4
-      RETURNING
-        id,
-        nome,
-        descricao,
-        criadoporusuarioid,
-        datacriacao,
-        atualizadoporusuarioid,
-        atualizadoem`,
-      [nome, descricao, usuarioId, id],
-    );
-    const perfil = result.rows[0];
+    return executarEmTransacao(async (client) => {
+      const anteriorResult = await client.query<PerfilDto>(
+        'SELECT * FROM perfis WHERE id = $1 FOR UPDATE',
+        [id],
+      );
+      const anterior = anteriorResult.rows[0];
 
-    if (!perfil) {
-      throw new NotFoundException('Perfil não encontrado.');
-    }
+      if (!anterior) throw new NotFoundException('Perfil não encontrado.');
 
-    return perfil;
+      const result = await client.query<PerfilDto>(
+        `UPDATE perfis
+        SET
+          nome = $1,
+          descricao = $2,
+          atualizadoporusuarioid = $3,
+          atualizadoem = CURRENT_TIMESTAMP
+        WHERE id = $4
+        RETURNING
+          id,
+          nome,
+          descricao,
+          criadoporusuarioid,
+          datacriacao,
+          atualizadoporusuarioid,
+          atualizadoem`,
+        [nome, descricao, usuarioId, id],
+      );
+      const perfil = result.rows[0];
+
+      await criarLog(
+        {
+          organizacaoid: organizacaoId,
+          feitoporusuarioid: usuarioId,
+          feitoem: new Date(),
+          acao: 'put',
+          antes: anterior,
+          depois: perfil,
+        },
+        client,
+      );
+
+      return perfil;
+    });
   }
 
   /**
-   * Remove os vínculos com permissões antes de excluir um perfil sem usuários.
+   * Remove e audita um perfil quando não houver usuários vinculados.
    * @param id Identificador do perfil que será excluído.
+   * @param usuarioId Identificador do usuário responsável pela exclusão.
+   * @param organizacaoId Identificador da organização do usuário autenticado.
    * @returns Uma Promise concluída quando o perfil for removido.
    */
-  async remove(id: number): Promise<void> {
+  async remove(
+    id: number,
+    usuarioId: number,
+    organizacaoId: number,
+  ): Promise<void> {
     if (!Number.isInteger(id) || id <= 0) {
       throw new BadRequestException('O perfil informado é inválido.');
     }
 
-    const client = await postgresPool.connect();
+    await executarEmTransacao(async (client) => {
+      const perfilResult = await client.query<PerfilDto>(
+        'SELECT * FROM perfis WHERE id = $1 FOR UPDATE',
+        [id],
+      );
+      const perfil = perfilResult.rows[0];
 
-    try {
-      await client.query('BEGIN');
+      if (!perfil) throw new NotFoundException('Perfil não encontrado.');
+
       const usuarios = await client.query<{ id: number }>(
         'SELECT id FROM usuarios WHERE perfilid = $1 LIMIT 1',
         [id],
@@ -216,35 +266,33 @@ export class PerfisService {
       await client.query('DELETE FROM perfil_permissao WHERE perfilid = $1', [
         id,
       ]);
-      const result = await client.query<{ id: number }>(
-        'DELETE FROM perfis WHERE id = $1 RETURNING id',
-        [id],
+      await client.query('DELETE FROM perfis WHERE id = $1', [id]);
+      await criarLog(
+        {
+          organizacaoid: organizacaoId,
+          feitoporusuarioid: usuarioId,
+          feitoem: new Date(),
+          acao: 'delete',
+          antes: perfil,
+        },
+        client,
       );
-
-      if (result.rowCount === 0) {
-        throw new NotFoundException('Perfil não encontrado.');
-      }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    });
   }
 
   /**
-   * Associa permissões a um perfil sem criar relacionamentos duplicados.
+   * Associa permissões a um perfil e audita apenas os novos vínculos.
    * @param perfilId Identificador do perfil que receberá as permissões.
    * @param dto Identificadores das permissões que serão associadas.
    * @param usuarioId Identificador do usuário responsável pela associação.
+   * @param organizacaoId Identificador da organização do usuário autenticado.
    * @returns Uma Promise concluída quando as associações forem persistidas.
    */
   async associatePermissions(
     perfilId: number,
     dto: AssociatePermissoesDto,
     usuarioId: number,
+    organizacaoId: number,
   ): Promise<void> {
     if (!Number.isInteger(perfilId) || perfilId <= 0) {
       throw new BadRequestException('O perfil informado é inválido.');
@@ -264,29 +312,52 @@ export class PerfisService {
 
     const permissoesIds = Array.from(new Set(dto.permissoesIds));
 
-    await postgresPool.query(
-      `INSERT INTO perfil_permissao (
-        perfilid,
-        permissaoid,
-        criadoporusuarioid,
-        datacriacao
-      )
-      SELECT $1, permissao.permissaoid, $2, CURRENT_TIMESTAMP
-      FROM UNNEST($3::INTEGER[]) AS permissao(permissaoid)
-      ON CONFLICT (perfilid, permissaoid) DO NOTHING`,
-      [perfilId, usuarioId, permissoesIds],
-    );
+    await executarEmTransacao(async (client) => {
+      const result = await client.query<PerfilPermissaoRow>(
+        `INSERT INTO perfil_permissao (
+          perfilid,
+          permissaoid,
+          criadoporusuarioid,
+          datacriacao
+        )
+        SELECT $1, permissao.permissaoid, $2, CURRENT_TIMESTAMP
+        FROM UNNEST($3::INTEGER[]) AS permissao(permissaoid)
+        ON CONFLICT (perfilid, permissaoid) DO NOTHING
+        RETURNING permissaoid`,
+        [perfilId, usuarioId, permissoesIds],
+      );
+
+      if (result.rows.length > 0) {
+        await criarLog(
+          {
+            organizacaoid: organizacaoId,
+            feitoporusuarioid: usuarioId,
+            feitoem: new Date(),
+            acao: 'post',
+            depois: {
+              perfilid: perfilId,
+              permissoesids: result.rows.map((item) => item.permissaoid),
+            },
+          },
+          client,
+        );
+      }
+    });
   }
 
   /**
-   * Remove um único vínculo entre um perfil e uma permissão.
+   * Remove e audita um vínculo entre perfil e permissão.
    * @param perfilId Identificador do perfil que perderá a permissão.
    * @param permissaoId Identificador da permissão cujo vínculo será removido.
+   * @param usuarioId Identificador do usuário responsável pela remoção.
+   * @param organizacaoId Identificador da organização do usuário autenticado.
    * @returns Uma Promise concluída quando o vínculo for removido.
    */
   async removePermissions(
     perfilId: number,
     permissaoId: number,
+    usuarioId: number,
+    organizacaoId: number,
   ): Promise<void> {
     if (!Number.isInteger(perfilId) || perfilId <= 0) {
       throw new BadRequestException('O perfil informado é inválido.');
@@ -296,11 +367,30 @@ export class PerfisService {
       throw new BadRequestException('A permissão informada é inválida.');
     }
 
-    await postgresPool.query(
-      `DELETE FROM perfil_permissao
-      WHERE perfilid = $1
-        AND permissaoid = $2`,
-      [perfilId, permissaoId],
-    );
+    await executarEmTransacao(async (client) => {
+      const result = await client.query<{
+        perfilid: number;
+        permissaoid: number;
+      }>(
+        `DELETE FROM perfil_permissao
+        WHERE perfilid = $1
+          AND permissaoid = $2
+        RETURNING perfilid, permissaoid`,
+        [perfilId, permissaoId],
+      );
+
+      if (result.rows.length > 0) {
+        await criarLog(
+          {
+            organizacaoid: organizacaoId,
+            feitoporusuarioid: usuarioId,
+            feitoem: new Date(),
+            acao: 'delete',
+            antes: result.rows[0],
+          },
+          client,
+        );
+      }
+    });
   }
 }

@@ -44,6 +44,7 @@ describe('Controller de perfis', () => {
         descricao: 'Acesso administrativo',
       },
       1,
+      2,
     );
     expect(status).toHaveBeenCalledWith(201);
     expect(json).toHaveBeenCalledWith({
@@ -120,7 +121,7 @@ describe('Controller de perfis', () => {
 
     await controller.update('10', body, request, response);
 
-    expect(update).toHaveBeenCalledWith(10, body, 1);
+    expect(update).toHaveBeenCalledWith(10, body, 1, 2);
     expect(json).toHaveBeenCalledWith({
       statusCode: 200,
       message: 'Perfil atualizado com sucesso.',
@@ -135,10 +136,17 @@ describe('Controller de perfis', () => {
     const json = jest.fn();
     const status = jest.fn().mockReturnValue({ json });
     const response = { status } as unknown as Response;
+    const request = {
+      jwtPayload: {
+        usuarioid: 1,
+        datalogin: '2026-10-10T12:00:00.000Z',
+        organizacaoid: 2,
+      },
+    } as JwtAuthenticatedRequest;
 
-    await controller.remove('10', response);
+    await controller.remove('10', request, response);
 
-    expect(remove).toHaveBeenCalledWith(10);
+    expect(remove).toHaveBeenCalledWith(10, 1, 2);
     expect(json).toHaveBeenCalledWith({
       statusCode: 200,
       message: 'Perfil excluído com sucesso.',
@@ -171,6 +179,7 @@ describe('Controller de perfis', () => {
       10,
       { permissoesIds: [1, 2] },
       1,
+      2,
     );
     expect(status).toHaveBeenCalledWith(201);
     expect(json).toHaveBeenCalledWith({
@@ -186,10 +195,17 @@ describe('Controller de perfis', () => {
     const json = jest.fn();
     const status = jest.fn().mockReturnValue({ json });
     const response = { status } as unknown as Response;
+    const request = {
+      jwtPayload: {
+        usuarioid: 1,
+        datalogin: '2026-10-10T12:00:00.000Z',
+        organizacaoid: 2,
+      },
+    } as JwtAuthenticatedRequest;
 
-    await controller.removePermissions('10', '2', response);
+    await controller.removePermissions('10', '2', request, response);
 
-    expect(removePermissions).toHaveBeenCalledWith(10, 2);
+    expect(removePermissions).toHaveBeenCalledWith(10, 2, 1, 2);
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       statusCode: 200,

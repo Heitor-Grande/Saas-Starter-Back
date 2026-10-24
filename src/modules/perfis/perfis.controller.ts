@@ -49,7 +49,11 @@ export class PerfisController {
   ): Promise<Response> {
     try {
       const usuarioId = request.jwtPayload.usuarioid;
-      const perfil = await this.perfisService.create(body, usuarioId);
+      const perfil = await this.perfisService.create(
+        body,
+        usuarioId,
+        request.jwtPayload.organizacaoid,
+      );
 
       return response
         .status(HttpStatus.CREATED)
@@ -180,6 +184,7 @@ export class PerfisController {
         Number(id),
         body,
         request.jwtPayload.usuarioid,
+        request.jwtPayload.organizacaoid,
       );
 
       return response
@@ -215,6 +220,7 @@ export class PerfisController {
   /**
    * Exclui um perfil e seus vínculos com permissões quando não houver usuários vinculados.
    * @param id Identificador do perfil recebido na URL.
+   * @param request Requisição autenticada que contém o payload do JWT.
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com a confirmação da exclusão ou o erro.
    */
@@ -222,10 +228,15 @@ export class PerfisController {
   @Delete('/remove/:id')
   async remove(
     @Param('id') id: string,
+    @Req() request: JwtAuthenticatedRequest,
     @Res() response: Response,
   ): Promise<Response> {
     try {
-      await this.perfisService.remove(Number(id));
+      await this.perfisService.remove(
+        Number(id),
+        request.jwtPayload.usuarioid,
+        request.jwtPayload.organizacaoid,
+      );
 
       return response
         .status(HttpStatus.OK)
@@ -282,6 +293,7 @@ export class PerfisController {
         Number(perfilId),
         body,
         request.jwtPayload.usuarioid,
+        request.jwtPayload.organizacaoid,
       );
 
       return response
@@ -315,6 +327,7 @@ export class PerfisController {
    * Remove um único vínculo entre o perfil e a permissão informada.
    * @param perfilId Identificador do perfil recebido na URL.
    * @param permissaoId Identificador da permissão recebido na URL.
+   * @param request Requisição autenticada que contém o payload do JWT.
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com o resultado ou o erro encontrado.
    */
@@ -323,12 +336,15 @@ export class PerfisController {
   async removePermissions(
     @Param('perfilId') perfilId: string,
     @Param('permissaoId') permissaoId: string,
+    @Req() request: JwtAuthenticatedRequest,
     @Res() response: Response,
   ): Promise<Response> {
     try {
       await this.perfisService.removePermissions(
         Number(perfilId),
         Number(permissaoId),
+        request.jwtPayload.usuarioid,
+        request.jwtPayload.organizacaoid,
       );
 
       return response

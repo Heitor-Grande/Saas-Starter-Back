@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
 import { generateHash } from '../../util/bcrypt/bcrypt';
 import { criarLog } from '../../util/criar-log/criar-log';
+import { executarEmTransacao } from '../../util/executar-em-transacao/executar-em-transacao';
 import { validarForcaSenha } from '../../util/validar-forca-senha/validar-forca-senha';
 import type {
   CadastroInicialDto,
@@ -30,14 +30,11 @@ export class CadastroInicialService {
       senha,
       Number(process.env.BCRYPT_SALT_ROUNDS),
     );
-    const client = await postgresPool.connect();
-
     try {
-      await client.query('BEGIN');
-
-      const organizacaoResult =
-        await client.query<CadastroInicialOrganizacaoDto>(
-          `INSERT INTO organizacoes (
+      return await executarEmTransacao(async (client) => {
+        const organizacaoResult =
+          await client.query<CadastroInicialOrganizacaoDto>(
+            `INSERT INTO organizacoes (
             nome,
             cnpj,
             planoid,
@@ -74,23 +71,23 @@ export class CadastroInicialService {
             criadoporusuarioid,
             atualizadoem,
             atualizadoporusuarioid`,
-          [
-            organizacao.nome,
-            organizacao.cnpj,
-            organizacao.planoid,
-            organizacao.cep,
-            organizacao.logradouro,
-            organizacao.numero,
-            organizacao.complemento,
-            organizacao.bairro,
-            organizacao.cidade,
-            organizacao.estado,
-          ],
-        );
-      const organizacaoCriada = organizacaoResult.rows[0];
+            [
+              organizacao.nome,
+              organizacao.cnpj,
+              organizacao.planoid,
+              organizacao.cep,
+              organizacao.logradouro,
+              organizacao.numero,
+              organizacao.complemento,
+              organizacao.bairro,
+              organizacao.cidade,
+              organizacao.estado,
+            ],
+          );
+        const organizacaoCriada = organizacaoResult.rows[0];
 
-      const usuarioResult = await client.query<CadastroInicialUsuarioDto>(
-        `INSERT INTO usuarios (
+        const usuarioResult = await client.query<CadastroInicialUsuarioDto>(
+          `INSERT INTO usuarios (
           nome,
           nomesocial,
           cpf,
@@ -121,26 +118,26 @@ export class CadastroInicialService {
           cargo,
           ativo,
           datacriacao`,
-        [
-          usuario.nome,
-          usuario.nomesocial,
-          usuario.cpf,
-          usuario.datanascimento,
-          usuario.email,
-          usuario.telefone,
-          organizacaoCriada.id,
-          3, // Perfil padrao de usuario responsavel
-          usuario.cargo,
-          usuario.ativo,
-          senhaHash.hash,
-          senhaHash.saltRounds,
-        ],
-      );
-      const usuarioCriado = usuarioResult.rows[0];
+          [
+            usuario.nome,
+            usuario.nomesocial,
+            usuario.cpf,
+            usuario.datanascimento,
+            usuario.email,
+            usuario.telefone,
+            organizacaoCriada.id,
+            3, // Perfil padrao de usuario responsavel
+            usuario.cargo,
+            usuario.ativo,
+            senhaHash.hash,
+            senhaHash.saltRounds,
+          ],
+        );
+        const usuarioCriado = usuarioResult.rows[0];
 
-      const organizacaoAtualizadaResult =
-        await client.query<CadastroInicialOrganizacaoDto>(
-          `UPDATE organizacoes
+        const organizacaoAtualizadaResult =
+          await client.query<CadastroInicialOrganizacaoDto>(
+            `UPDATE organizacoes
           SET
             usuarioresponsavelid = $1,
             criadoporusuarioid = $1,
@@ -164,32 +161,29 @@ export class CadastroInicialService {
             criadoporusuarioid,
             atualizadoem,
             atualizadoporusuarioid`,
-          [usuarioCriado.id, organizacaoCriada.id],
+            [usuarioCriado.id, organizacaoCriada.id],
+          );
+
+        await criarLog(
+          {
+            organizacaoid: organizacaoCriada.id,
+            feitoporusuarioid: usuarioCriado.id,
+            feitoem: new Date(),
+            acao: 'post',
+            depois: {
+              organizacao: organizacaoAtualizadaResult.rows[0],
+              usuario: usuarioCriado,
+            },
+          },
+          client,
         );
 
-      await criarLog(
-        {
-          organizacaoid: organizacaoCriada.id,
-          feitoporusuarioid: usuarioCriado.id,
-          feitoem: new Date(),
-          acao: 'post',
-          depois: {
-            organizacao: organizacaoAtualizadaResult.rows[0],
-            usuario: usuarioCriado,
-          },
-        },
-        client,
-      );
-
-      await client.query('COMMIT');
-
-      return {
-        organizacao: organizacaoAtualizadaResult.rows[0],
-        usuario: usuarioCriado,
-      };
+        return {
+          organizacao: organizacaoAtualizadaResult.rows[0],
+          usuario: usuarioCriado,
+        };
+      });
     } catch (error) {
-      await client.query('ROLLBACK');
-
       if (this.isUniqueViolation(error)) {
         throw new BadRequestException(
           'Ja existe um cadastro com CNPJ, CPF ou e-mail informado.',
@@ -197,8 +191,6 @@ export class CadastroInicialService {
       }
 
       throw error;
-    } finally {
-      client.release();
     }
   }
 

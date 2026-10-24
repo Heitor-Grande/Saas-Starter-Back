@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { executarEmTransacao } from '../../util/executar-em-transacao/executar-em-transacao';
 import type {
   CreatePermissaoDto,
   PermissaoDto,
@@ -182,10 +183,7 @@ export class PermissoesService {
       throw new BadRequestException('A permissão informada é inválida.');
     }
 
-    const client = await postgresPool.connect();
-
-    try {
-      await client.query('BEGIN');
+    await executarEmTransacao(async (client) => {
       await client.query(
         'DELETE FROM perfil_permissao WHERE permissaoid = $1',
         [id],
@@ -198,13 +196,6 @@ export class PermissoesService {
       if (result.rowCount === 0) {
         throw new NotFoundException('Permissão não encontrada.');
       }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    });
   }
 }
