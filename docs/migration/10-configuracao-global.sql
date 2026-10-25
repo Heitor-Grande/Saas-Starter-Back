@@ -1,0 +1,21 @@
+CREATE TABLE public.configuracao_global (
+	id int4 DEFAULT 1 NOT NULL,
+	nome_aplicacao varchar(100) DEFAULT 'SaaS Starter'::character varying NOT NULL,
+	email_suporte varchar(255) NULL,
+	smtp_servidor varchar(255) NULL,
+	smtp_porta int4 NULL,
+	smtp_usuario varchar(255) NULL,
+	smtp_senha varchar(255) NULL,
+	smtp_remetente_nome varchar(100) NULL,
+	smtp_remetente_email varchar(255) NULL,
+	criado_em timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	atualizado_em timestamptz DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	atualizadoporusuarioid int4 NULL,
+	CONSTRAINT configuracao_global_atualizado_em_not_null NOT NULL atualizado_em,
+	CONSTRAINT configuracao_global_criado_em_not_null NOT NULL criado_em,
+	CONSTRAINT configuracao_global_id_check CHECK ((id = 1)),
+	CONSTRAINT configuracao_global_id_not_null NOT NULL id,
+	CONSTRAINT configuracao_global_nome_aplicacao_not_null NOT NULL nome_aplicacao,
+	CONSTRAINT configuracao_global_pkey PRIMARY KEY (id),
+	CONSTRAINT configuracao_global_atualizadoporusuarioid_foreign FOREIGN KEY (atualizadoporusuarioid) REFERENCES public.usuarios(id)
+);

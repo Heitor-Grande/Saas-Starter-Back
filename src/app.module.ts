@@ -17,6 +17,7 @@ import { LogModule } from './modules/log/log.module';
 import { OrganizacoesUsuariosModule } from './modules/organizacoes-usuarios/organizacoes-usuarios.module';
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
+import { PlanosModule } from './modules/planos/planos.module';
 
 if (!process.env.RATE_LIMIT_WINDOW_MS || !process.env.RATE_LIMIT_MAX) {
   throw new Error(
@@ -44,6 +45,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX);
     OrganizacoesUsuariosModule,
     PerfisModule,
     PermissoesModule,
+    PlanosModule,
   ],
   controllers: [AppController],
   providers: [

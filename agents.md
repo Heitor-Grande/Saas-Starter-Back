@@ -97,6 +97,9 @@ As migrations ficam em `docs/migration/`.
 - Utilize códigos HTTP apropriados.
 - Utilize `createApiResponse` para padronizar as respostas.
 - Ao responder manualmente, utilize `return response` na mesma instrução que chama `status` e `json`.
+- Em cada bloco `catch` de Controller, trate explicitamente todas as exceções esperadas pela rota e retorne o código HTTP correspondente, como `400` para `BadRequestException`, `404` para `NotFoundException` e `409` para `ConflictException`.
+- Após os tratamentos esperados, mantenha um retorno `500` para erros inesperados com uma mensagem genérica em português; nunca exponha a mensagem interna, stack trace ou detalhes do banco.
+- Não utilize um tratador genérico compartilhado quando ele puder associar à rota exceções que aquela operação não produz; o tratamento deve permanecer visível e específico em cada `catch`.
 - Não exponha informações sensíveis nem erros internos.
 - Utilize o usuário autenticado pelo JWT para dados de auditoria; não aceite esse identificador livremente do cliente.
 - O payload JWT padrão deve conter `usuarioid` numérico, `datalogin` em formato ISO e `organizacaoid` numérico; não utilize a propriedade `sub`.
