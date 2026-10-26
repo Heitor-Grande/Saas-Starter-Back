@@ -1,6 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import type { PoolClient } from 'pg';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import {
+  mockClienteTransacional,
+  mockConsultas,
+} from '../../test/helpers/postgres-mock';
 import type { PlanoDto } from './dto/create-plano.dto';
 import { PlanosService } from './planos.service';
 
@@ -19,15 +21,9 @@ describe('Serviço de planos', () => {
   afterEach(() => jest.restoreAllMocks());
 
   it('deve criar um plano e registrar o log', async () => {
-    const query = jest.fn((sql: string) =>
-      Promise.resolve(
-        sql.includes('INSERT INTO planos') ? { rows: [plano] } : { rows: [] },
-      ),
+    const { query } = mockClienteTransacional((sql) =>
+      sql.includes('INSERT INTO planos') ? { rows: [plano] } : {},
     );
-    const release = jest.fn();
-    jest
-      .spyOn(postgresPool, 'connect')
-      .mockResolvedValue({ query, release } as unknown as PoolClient);
 
     await expect(
       new PlanosService().create(
@@ -44,24 +40,12 @@ describe('Serviço de planos', () => {
   });
 
   it('deve listar todos os planos', async () => {
-    jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'SELECT',
-      rowCount: 1,
-      oid: 0,
-      rows: [plano],
-      fields: [],
-    });
+    mockConsultas([[plano]]);
     await expect(new PlanosService().findAll()).resolves.toEqual([plano]);
   });
 
   it('deve informar quando o plano não for encontrado', async () => {
-    jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'SELECT',
-      rowCount: 0,
-      oid: 0,
-      rows: [],
-      fields: [],
-    });
+    mockConsultas([[]]);
     await expect(new PlanosService().findOne(99)).rejects.toBeInstanceOf(
       NotFoundException,
     );

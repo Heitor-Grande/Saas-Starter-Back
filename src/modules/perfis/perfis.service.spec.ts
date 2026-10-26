@@ -3,34 +3,12 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import type { PoolClient } from 'pg';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import {
+  mockClienteTransacional as mockClient,
+  mockConsultas,
+} from '../../test/helpers/postgres-mock';
 import type { PerfilDetalhadoDto, PerfilDto } from './dto/create-perfil.dto';
 import { PerfisService } from './perfis.service';
-
-type QueryResultMock = {
-  rows?: unknown[];
-  rowCount?: number;
-};
-
-/** Cria um cliente transacional falso que responde conforme o SQL recebido. */
-function mockClient(
-  resolver: (sql: string, valores?: unknown[]) => QueryResultMock,
-): { query: jest.Mock; release: jest.Mock } {
-  const query = jest.fn((sql: string, valores?: unknown[]) =>
-    Promise.resolve({
-      rows: [],
-      rowCount: 0,
-      ...resolver(sql, valores),
-    }),
-  );
-  const release = jest.fn();
-  jest
-    .spyOn(postgresPool, 'connect')
-    .mockResolvedValue({ query, release } as unknown as PoolClient);
-
-  return { query, release };
-}
 
 describe('Serviço de perfis', () => {
   afterEach(() => {
@@ -85,27 +63,13 @@ describe('Serviço de perfis', () => {
       atualizadoem: new Date(),
     };
     const esperado: PerfilDetalhadoDto = { ...perfil, permissoesids: [2, 4] };
-    const query = jest.spyOn(
-      postgresPool,
-      'query',
-    ) as unknown as jest.MockedFunction<
-      (sql: string, valores: unknown[]) => Promise<{ rows: unknown[] }>
-    >;
-    query.mockResolvedValueOnce({ rows: [perfil] }).mockResolvedValueOnce({
-      rows: [{ permissaoid: 2 }, { permissaoid: 4 }],
-    });
+    mockConsultas([[perfil], [{ permissaoid: 2 }, { permissaoid: 4 }]]);
 
     await expect(new PerfisService().findOne(10)).resolves.toEqual(esperado);
   });
 
   it('deve informar quando o perfil não for encontrado', async () => {
-    jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'SELECT',
-      rowCount: 0,
-      oid: 0,
-      rows: [],
-      fields: [],
-    });
+    mockConsultas([[]]);
 
     await expect(new PerfisService().findOne(10)).rejects.toBeInstanceOf(
       NotFoundException,
@@ -113,13 +77,7 @@ describe('Serviço de perfis', () => {
   });
 
   it('deve listar todos os perfis cadastrados', async () => {
-    const query = jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'SELECT',
-      rowCount: 0,
-      oid: 0,
-      rows: [],
-      fields: [],
-    });
+    const query = mockConsultas([[]]);
 
     await expect(new PerfisService().findAll()).resolves.toEqual([]);
     expect(query).toHaveBeenCalledTimes(1);

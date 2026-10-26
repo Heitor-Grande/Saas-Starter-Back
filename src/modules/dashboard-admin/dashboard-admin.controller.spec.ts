@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import { DashboardAdminController } from './dashboard-admin.controller';
 
 describe('Controller do dashboard administrativo', () => {
@@ -12,9 +12,7 @@ describe('Controller do dashboard administrativo', () => {
     };
     const findAll = jest.fn().mockResolvedValue(dashboard);
     const controller = new DashboardAdminController({ findAll });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 
@@ -30,9 +28,7 @@ describe('Controller do dashboard administrativo', () => {
   it('deve retornar erro interno sem expor detalhes da consulta', async () => {
     const findAll = jest.fn().mockRejectedValue(new Error('erro do banco'));
     const controller = new DashboardAdminController({ findAll });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 

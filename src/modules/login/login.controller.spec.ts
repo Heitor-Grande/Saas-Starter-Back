@@ -3,7 +3,7 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import type { LoginRequestDto } from './dto/login.dto';
 import { LoginController } from './login.controller';
 import type { LoginService } from './login.service';
@@ -18,7 +18,7 @@ describe('Controller de login', () => {
     const loginResult = { token: 'token-jwt' };
     const login = jest.fn().mockResolvedValue(loginResult);
     const service = { login } as unknown as LoginService;
-    const responseMock = createResponseMock();
+    const responseMock = mockResponse();
     const controller = new LoginController(service);
 
     await controller.login(dto, responseMock.response);
@@ -39,7 +39,7 @@ describe('Controller de login', () => {
         new BadRequestException('O e-mail informado é inválido.'),
       );
     const service = { login } as unknown as LoginService;
-    const responseMock = createResponseMock();
+    const responseMock = mockResponse();
     const controller = new LoginController(service);
 
     await controller.login(dto, responseMock.response);
@@ -59,7 +59,7 @@ describe('Controller de login', () => {
         new UnauthorizedException('E-mail ou senha inválidos.'),
       );
     const service = { login } as unknown as LoginService;
-    const responseMock = createResponseMock();
+    const responseMock = mockResponse();
     const controller = new LoginController(service);
 
     await controller.login(dto, responseMock.response);
@@ -77,14 +77,3 @@ describe('Controller de login', () => {
  * Cria um mock encadeavel de resposta HTTP para testar o controller.
  * @returns Um objeto com os metodos status e json monitorados pelo Jest.
  */
-function createResponseMock(): {
-  response: Response;
-  status: jest.Mock;
-  json: jest.Mock;
-} {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnValue({ json });
-  const response = { status } as unknown as Response;
-
-  return { response, status, json };
-}

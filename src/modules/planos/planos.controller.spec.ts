@@ -3,8 +3,8 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
+import { mockResponse } from '../../test/helpers/http-mock';
 import { PlanosController } from './planos.controller';
 import { PlanosService } from './planos.service';
 
@@ -17,16 +17,6 @@ const request = {
 } as JwtAuthenticatedRequest;
 
 /** Cria a resposta HTTP falsa usada para validar status e conteúdo. */
-function criarResponse(): {
-  response: Response;
-  status: jest.Mock;
-  json: jest.Mock;
-} {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnValue({ json });
-  return { response: { status } as unknown as Response, status, json };
-}
-
 describe('Controller de planos', () => {
   it.each([
     [new BadRequestException('O plano informado é inválido.'), 400],
@@ -44,7 +34,7 @@ describe('Controller de planos', () => {
       const controller = new PlanosController({
         remove,
       } as unknown as PlanosService);
-      const { response, status, json } = criarResponse();
+      const { response, status, json } = mockResponse();
 
       await controller.remove('10', request, response);
 
@@ -62,7 +52,7 @@ describe('Controller de planos', () => {
     const controller = new PlanosController({
       remove: jest.fn().mockRejectedValue(new Error('detalhe interno')),
     } as unknown as PlanosService);
-    const { response, status, json } = criarResponse();
+    const { response, status, json } = mockResponse();
 
     await controller.remove('10', request, response);
 

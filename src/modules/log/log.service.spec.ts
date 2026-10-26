@@ -1,4 +1,4 @@
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockConsultas } from '../../test/helpers/postgres-mock';
 import type { LogDto } from './dto/log.dto';
 import { LogService } from './log.service';
 
@@ -23,13 +23,7 @@ describe('Serviço de logs', () => {
         depois: { nome: 'Novo' },
       },
     ];
-    const query = jest.spyOn(
-      postgresPool,
-      'query',
-    ) as unknown as jest.MockedFunction<
-      (sql: string) => Promise<{ rows: LogDto[] }>
-    >;
-    query.mockResolvedValue({ rows: logs });
+    const query = mockConsultas([logs]);
 
     await expect(new LogService().findAll()).resolves.toEqual(logs);
     expect(query).toHaveBeenCalledWith(expect.stringContaining('FROM log'));

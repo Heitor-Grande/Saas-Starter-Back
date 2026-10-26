@@ -1,34 +1,20 @@
 import { NotFoundException } from '@nestjs/common';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockConsultas } from '../../test/helpers/postgres-mock';
 import { CarregaPermissoesUsuarioService } from './carrega-permissoes-usuario.service';
 
 describe('Serviço de carregamento de permissões do usuário', () => {
   const service = new CarregaPermissoesUsuarioService();
-  let query: jest.MockedFunction<
-    (
-      sql: string,
-      values?: number[],
-    ) => Promise<{ rows: Record<string, unknown>[] }>
-  >;
+  const permissaoMock = { id: 10, nome: 'AcessoMinhaOrganização' };
 
-  beforeEach(() => {
-    query = jest.spyOn(postgresPool, 'query') as unknown as typeof query;
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  afterEach(() => jest.restoreAllMocks());
 
   it('deve incluir todas as permissões e permitir apenas as vinculadas ao perfil', async () => {
-    query
-      .mockResolvedValueOnce({ rows: [{ perfilid: 8 }] })
-      .mockResolvedValueOnce({ rows: [{ permissaoid: 20 }] })
-      .mockResolvedValueOnce({
-        rows: [
-          { id: 10, nome: 'AcessoMinhaOrganização' },
-          { id: 20, nome: 'AcessoSistema' },
-        ],
-      });
+    const permissoes = [permissaoMock, { id: 20, nome: 'AcessoSistema' }];
+    const query = mockConsultas([
+      [{ perfilid: 8 }],
+      [{ permissaoid: 20 }],
+      permissoes,
+    ]);
 
     await expect(service.carregar(3)).resolves.toEqual([
       { permissão: 'AcessoMinhaOrganização', temacesso: false },
@@ -47,30 +33,19 @@ describe('Serviço de carregamento de permissões do usuário', () => {
   });
 
   it('deve negar todos os acessos quando o perfil não possui vínculos', async () => {
-    query
-      .mockResolvedValueOnce({ rows: [{ perfilid: 8 }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({
-        rows: [{ id: 10, nome: 'AcessoMinhaOrganização' }],
-      });
-
+    mockConsultas([[{ perfilid: 8 }], [], [permissaoMock]]);
     await expect(service.carregar(3)).resolves.toEqual([
       { permissão: 'AcessoMinhaOrganização', temacesso: false },
     ]);
   });
 
   it('deve retornar uma lista vazia quando não existem permissões cadastradas', async () => {
-    query
-      .mockResolvedValueOnce({ rows: [{ perfilid: 8 }] })
-      .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [] });
-
+    mockConsultas([[{ perfilid: 8 }], [], []]);
     await expect(service.carregar(3)).resolves.toEqual([]);
   });
 
   it('deve interromper a consulta quando o usuário não existe', async () => {
-    query.mockResolvedValueOnce({ rows: [] });
-
+    const query = mockConsultas([[]]);
     await expect(service.carregar(3)).rejects.toBeInstanceOf(NotFoundException);
     expect(query).toHaveBeenCalledTimes(1);
   });

@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import { OrganizacoesUsuariosController } from './organizacoes-usuarios.controller';
 
 describe('Controller de organizações e usuários', () => {
@@ -17,9 +17,7 @@ describe('Controller de organizações e usuários', () => {
     const controller = new OrganizacoesUsuariosController({
       findAll,
     });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 
@@ -37,9 +35,7 @@ describe('Controller de organizações e usuários', () => {
     const controller = new OrganizacoesUsuariosController({
       findAll,
     });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 

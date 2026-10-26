@@ -1,6 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import type { PoolClient } from 'pg';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockTransacaoSequencial } from '../../test/helpers/postgres-mock';
 import * as bcryptUtil from '../../util/bcrypt/bcrypt';
 import { CadastroInicialService } from './cadastro-inicial.service';
 import type {
@@ -80,20 +79,14 @@ describe('Servico de cadastro inicial', () => {
       criadoporusuarioid: 20,
       atualizadoporusuarioid: 20,
     };
-    const query = jest
-      .fn()
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({ rows: [organizacaoCriada] })
-      .mockResolvedValueOnce({ rows: [usuarioCriado] })
-      .mockResolvedValueOnce({ rows: [organizacaoAtualizada] })
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({});
-    const release = jest.fn();
-    const connect = jest.spyOn(
-      postgresPool,
-      'connect',
-    ) as unknown as jest.MockedFunction<() => Promise<PoolClient>>;
-    connect.mockResolvedValue({ query, release } as unknown as PoolClient);
+    const { query, release } = mockTransacaoSequencial([
+      {},
+      { rows: [organizacaoCriada] },
+      { rows: [usuarioCriado] },
+      { rows: [organizacaoAtualizada] },
+      {},
+      {},
+    ]);
     jest.spyOn(bcryptUtil, 'generateHash').mockReturnValue({
       hash: 'hash-da-senha',
       saltRounds: 10,
@@ -152,18 +145,15 @@ describe('Servico de cadastro inicial', () => {
   });
 
   it('deve desfazer a transacao quando houver erro de unicidade', async () => {
-    const query = jest
-      .fn()
-      .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({ rows: [{ id: 10 }] })
-      .mockRejectedValueOnce({ code: '23505' })
-      .mockResolvedValueOnce({});
-    const release = jest.fn();
-    const connect = jest.spyOn(
-      postgresPool,
-      'connect',
-    ) as unknown as jest.MockedFunction<() => Promise<PoolClient>>;
-    connect.mockResolvedValue({ query, release } as unknown as PoolClient);
+    const erroUnicidade = Object.assign(new Error('registro duplicado'), {
+      code: '23505',
+    });
+    const { query, release } = mockTransacaoSequencial([
+      {},
+      { rows: [{ id: 10 }] },
+      erroUnicidade,
+      {},
+    ]);
     jest.spyOn(bcryptUtil, 'generateHash').mockReturnValue({
       hash: 'hash-da-senha',
       saltRounds: 10,

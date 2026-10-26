@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import type { PermissaoDto } from './dto/create-permissao.dto';
 import { PermissoesController } from './permissoes.controller';
@@ -25,9 +25,7 @@ describe('Controller de permissões', () => {
         organizacaoid: 2,
       },
     } as JwtAuthenticatedRequest;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.create(
       {
@@ -65,9 +63,7 @@ describe('Controller de permissões', () => {
     const findOne = jest.fn().mockResolvedValue(permissao);
     const service = { findOne } as unknown as PermissoesService;
     const controller = new PermissoesController(service);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
 
     await controller.findOne('10', response);
 
@@ -84,9 +80,7 @@ describe('Controller de permissões', () => {
     const findAll = jest.fn().mockResolvedValue(permissoes);
     const service = { findAll } as unknown as PermissoesService;
     const controller = new PermissoesController(service);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
 
     await controller.findAll(response);
 
@@ -109,9 +103,7 @@ describe('Controller de permissões', () => {
         organizacaoid: 2,
       },
     } as JwtAuthenticatedRequest;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
     const body = {
       nome: 'Editar usuário',
       descricao: 'Permite editar usuários',
@@ -130,9 +122,7 @@ describe('Controller de permissões', () => {
     const remove = jest.fn().mockResolvedValue(undefined);
     const service = { remove } as unknown as PermissoesService;
     const controller = new PermissoesController(service);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.remove('10', response);
 

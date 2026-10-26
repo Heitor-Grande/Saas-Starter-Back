@@ -1,4 +1,4 @@
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockConsultas } from '../../test/helpers/postgres-mock';
 import { OrganizacoesUsuariosService } from './organizacoes-usuarios.service';
 
 describe('Serviço de organizações e usuários', () => {
@@ -7,43 +7,36 @@ describe('Serviço de organizações e usuários', () => {
   });
 
   it('deve agrupar os usuários nas respectivas organizações', async () => {
-    const query = jest.spyOn(
-      postgresPool,
-      'query',
-    ) as unknown as jest.MockedFunction<
-      (query: string) => Promise<{ rows: Record<string, unknown>[] }>
-    >;
-    query.mockResolvedValue({
-      rows: [
-        {
-          organizacaoid: 1,
-          organizacaonome: 'Empresa Alpha',
-          plano: 'Growth',
-          usuarioid: 10,
-          usuarionome: 'Ana Silva',
-          perfil: 'Administrador',
-          usuarioativo: true,
-        },
-        {
-          organizacaoid: 1,
-          organizacaonome: 'Empresa Alpha',
-          plano: 'Growth',
-          usuarioid: 11,
-          usuarionome: 'Bruno Souza',
-          perfil: 'Gestor',
-          usuarioativo: false,
-        },
-        {
-          organizacaoid: 2,
-          organizacaonome: 'Empresa Beta',
-          plano: 'Starter',
-          usuarioid: null,
-          usuarionome: null,
-          perfil: null,
-          usuarioativo: null,
-        },
-      ],
-    });
+    const organizacoesUsuarios = [
+      {
+        organizacaoid: 1,
+        organizacaonome: 'Empresa Alpha',
+        plano: 'Growth',
+        usuarioid: 10,
+        usuarionome: 'Ana Silva',
+        perfil: 'Administrador',
+        usuarioativo: true,
+      },
+      {
+        organizacaoid: 1,
+        organizacaonome: 'Empresa Alpha',
+        plano: 'Growth',
+        usuarioid: 11,
+        usuarionome: 'Bruno Souza',
+        perfil: 'Gestor',
+        usuarioativo: false,
+      },
+      {
+        organizacaoid: 2,
+        organizacaonome: 'Empresa Beta',
+        plano: 'Starter',
+        usuarioid: null,
+        usuarionome: null,
+        perfil: null,
+        usuarioativo: null,
+      },
+    ];
+    const query = mockConsultas([organizacoesUsuarios]);
     const service = new OrganizacoesUsuariosService();
 
     await expect(service.findAll()).resolves.toEqual([
@@ -67,13 +60,7 @@ describe('Serviço de organizações e usuários', () => {
   });
 
   it('deve retornar uma lista vazia quando não houver organizações', async () => {
-    const query = jest.spyOn(
-      postgresPool,
-      'query',
-    ) as unknown as jest.MockedFunction<
-      (query: string) => Promise<{ rows: Record<string, unknown>[] }>
-    >;
-    query.mockResolvedValue({ rows: [] });
+    mockConsultas([[]]);
     const service = new OrganizacoesUsuariosService();
 
     await expect(service.findAll()).resolves.toEqual([]);

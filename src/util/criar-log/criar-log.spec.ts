@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockConsultas } from '../../test/helpers/postgres-mock';
 import { criarLog } from './criar-log';
 
 describe('criarLog', () => {
@@ -8,13 +8,7 @@ describe('criarLog', () => {
   });
 
   it('deve registrar a alteracao com os estados anterior e posterior', async () => {
-    const query = jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'INSERT',
-      rowCount: 1,
-      oid: 0,
-      rows: [],
-      fields: [],
-    });
+    const query = mockConsultas([[]]);
     const feitoem = new Date('2026-10-11T12:00:00.000Z');
 
     await criarLog({
@@ -37,13 +31,7 @@ describe('criarLog', () => {
   });
 
   it('deve aceitar estados anterior e posterior ausentes', async () => {
-    const query = jest.spyOn(postgresPool, 'query').mockResolvedValue({
-      command: 'INSERT',
-      rowCount: 1,
-      oid: 0,
-      rows: [],
-      fields: [],
-    });
+    const query = mockConsultas([[]]);
 
     await criarLog({
       organizacaoid: 1,

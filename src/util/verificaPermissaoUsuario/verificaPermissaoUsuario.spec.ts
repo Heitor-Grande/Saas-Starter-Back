@@ -1,16 +1,12 @@
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { mockConsultas } from '../../test/helpers/postgres-mock';
 import { verificaPermissaoUsuario } from './verificaPermissaoUsuario';
 
 describe('Verificação de permissão do usuário', () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  afterEach(() => jest.restoreAllMocks());
 
   it('deve retornar true quando o perfil possui a permissão', async () => {
-    const query = jest.spyOn(postgresPool, 'query');
-    query
-      .mockResolvedValueOnce({ rows: [{ perfilid: 4 }] } as never)
-      .mockResolvedValueOnce({ rows: [{ id: 10 }] } as never);
+    const query = mockConsultas([[{ perfilid: 4 }], [{ id: 10 }]]);
 
     await expect(verificaPermissaoUsuario(2, 'VisualizaPerfis')).resolves.toBe(
       true,
@@ -23,21 +19,14 @@ describe('Verificação de permissão do usuário', () => {
   });
 
   it('deve retornar false quando o perfil não possui a permissão', async () => {
-    const query = jest.spyOn(postgresPool, 'query');
-    query
-      .mockResolvedValueOnce({ rows: [{ perfilid: 4 }] } as never)
-      .mockResolvedValueOnce({ rows: [] } as never);
-
+    mockConsultas([[{ perfilid: 4 }], []]);
     await expect(verificaPermissaoUsuario(2, 'VisualizaPerfis')).resolves.toBe(
       false,
     );
   });
 
   it('deve retornar false quando o usuário não existe', async () => {
-    const query = jest
-      .spyOn(postgresPool, 'query')
-      .mockResolvedValueOnce({ rows: [] } as never);
-
+    const query = mockConsultas([[]]);
     await expect(verificaPermissaoUsuario(2, 'VisualizaPerfis')).resolves.toBe(
       false,
     );
@@ -46,7 +35,6 @@ describe('Verificação de permissão do usuário', () => {
 
   it('deve retornar false para parâmetros inválidos sem consultar o banco', async () => {
     const query = jest.spyOn(postgresPool, 'query');
-
     await expect(verificaPermissaoUsuario(0, '')).resolves.toBe(false);
     expect(query).not.toHaveBeenCalled();
   });

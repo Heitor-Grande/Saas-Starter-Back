@@ -1,5 +1,5 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common';
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import { CadastroInicialController } from './cadastro-inicial.controller';
 import type { CadastroInicialService } from './cadastro-inicial.service';
 import type { CreateCadastroInicialDto } from './dto/create-cadastro-inicial.dto';
@@ -16,7 +16,7 @@ describe('Controller de cadastro inicial', () => {
     const service = {
       create,
     } as unknown as CadastroInicialService;
-    const responseMock = createResponseMock();
+    const responseMock = mockResponse();
     const response = responseMock.response;
     const controller = new CadastroInicialController(service);
 
@@ -38,7 +38,7 @@ describe('Controller de cadastro inicial', () => {
     const service = {
       create,
     } as unknown as CadastroInicialService;
-    const responseMock = createResponseMock();
+    const responseMock = mockResponse();
     const response = responseMock.response;
     const controller = new CadastroInicialController(service);
 
@@ -57,14 +57,3 @@ describe('Controller de cadastro inicial', () => {
  * Cria um mock encadeavel de resposta HTTP para testar o controller.
  * @returns Um objeto com os metodos status e json monitorados pelo Jest.
  */
-function createResponseMock(): {
-  response: Response;
-  status: jest.Mock;
-  json: jest.Mock;
-} {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnValue({ json });
-  const response = { status } as unknown as Response;
-
-  return { response, status, json };
-}

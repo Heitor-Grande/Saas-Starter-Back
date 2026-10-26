@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import type { PerfilDetalhadoDto, PerfilDto } from './dto/create-perfil.dto';
 import { PerfisController } from './perfis.controller';
@@ -25,9 +25,7 @@ describe('Controller de perfis', () => {
         organizacaoid: 2,
       },
     } as JwtAuthenticatedRequest;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.create(
       {
@@ -69,9 +67,7 @@ describe('Controller de perfis', () => {
     const controller = new PerfisController({
       findOne,
     } as unknown as PerfisService);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
 
     await controller.findOne('10', response);
 
@@ -88,9 +84,7 @@ describe('Controller de perfis', () => {
     const controller = new PerfisController({
       findAll,
     } as unknown as PerfisService);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
 
     await controller.findAll(response);
 
@@ -114,9 +108,7 @@ describe('Controller de perfis', () => {
         organizacaoid: 2,
       },
     } as JwtAuthenticatedRequest;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
     const body = { nome: 'Gestor', descricao: 'Acesso de gestão' };
 
     await controller.update('10', body, request, response);
@@ -133,9 +125,7 @@ describe('Controller de perfis', () => {
     const controller = new PerfisController({
       remove,
     } as unknown as PerfisService);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, json } = mockResponse();
     const request = {
       jwtPayload: {
         usuarioid: 1,
@@ -164,9 +154,7 @@ describe('Controller de perfis', () => {
         organizacaoid: 2,
       },
     } as JwtAuthenticatedRequest;
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.associatePermissions(
       '10',
@@ -192,9 +180,7 @@ describe('Controller de perfis', () => {
     const removePermissions = jest.fn().mockResolvedValue(undefined);
     const service = { removePermissions } as unknown as PerfisService;
     const controller = new PerfisController(service);
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
     const request = {
       jwtPayload: {
         usuarioid: 1,

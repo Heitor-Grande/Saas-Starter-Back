@@ -1,4 +1,4 @@
-import type { Response } from 'express';
+import { mockResponse } from '../../test/helpers/http-mock';
 import { LogController } from './log.controller';
 
 describe('Controller de logs', () => {
@@ -6,9 +6,7 @@ describe('Controller de logs', () => {
     const logs = [{ id: 1, acao: 'POST' }];
     const findAll = jest.fn().mockResolvedValue(logs);
     const controller = new LogController({ findAll });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 
@@ -24,9 +22,7 @@ describe('Controller de logs', () => {
   it('deve retornar erro interno sem expor detalhes da consulta', async () => {
     const findAll = jest.fn().mockRejectedValue(new Error('erro do banco'));
     const controller = new LogController({ findAll });
-    const json = jest.fn();
-    const status = jest.fn().mockReturnValue({ json });
-    const response = { status } as unknown as Response;
+    const { response, status, json } = mockResponse();
 
     await controller.findAll(response);
 
