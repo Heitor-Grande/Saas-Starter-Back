@@ -13,6 +13,7 @@ import { JwtAuthMiddleware } from './middleware/jwt-auth/jwt-auth.middleware';
 import { CadastroInicialModule } from './modules/cadastro-inicial/cadastro-inicial.module';
 import { CarregaPermissoesUsuarioModule } from './modules/carrega-permissoes-usuario/carrega-permissoes-usuario.module';
 import { ConfiguracaoGlobalModule } from './modules/configuracao-global/configuracao-global.module';
+import { DashboardAdminModule } from './modules/dashboard-admin/dashboard-admin.module';
 import { LoginModule } from './modules/login/login.module';
 import { LogModule } from './modules/log/log.module';
 import { OrganizacoesUsuariosModule } from './modules/organizacoes-usuarios/organizacoes-usuarios.module';
@@ -42,6 +43,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX);
     CadastroInicialModule,
     CarregaPermissoesUsuarioModule,
     ConfiguracaoGlobalModule,
+    DashboardAdminModule,
     LoginModule,
     LogModule,
     OrganizacoesUsuariosModule,
