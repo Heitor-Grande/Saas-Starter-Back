@@ -9,10 +9,7 @@ export type UpdateConfiguracaoGlobalDto = {
   smtp_remetente_email?: string | null;
 };
 
-export type ConfiguracaoGlobalDto = Omit<
-  UpdateConfiguracaoGlobalDto,
-  'smtp_senha'
-> & {
+export type ConfiguracaoGlobalDto = UpdateConfiguracaoGlobalDto & {
   id: 1;
   criado_em: Date;
   atualizado_em: Date;

@@ -6,6 +6,7 @@ import {
 import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
 import { criarLog } from '../../util/criar-log/criar-log';
 import { executarEmTransacao } from '../../util/executar-em-transacao/executar-em-transacao';
+import { criptografar } from '../../util/nodeCrypto/nodeCrypto';
 import type {
   ConfiguracaoGlobalDto,
   UpdateConfiguracaoGlobalDto,
@@ -17,13 +18,15 @@ export class ConfiguracaoGlobalService {
   async findOne(): Promise<ConfiguracaoGlobalDto> {
     const result = await postgresPool.query<ConfiguracaoGlobalDto>(
       `SELECT id, nome_aplicacao, email_suporte, smtp_servidor, smtp_porta,
-        smtp_usuario, smtp_remetente_nome, smtp_remetente_email, criado_em,
-        atualizado_em, atualizadoporusuarioid
+        smtp_usuario, smtp_senha, smtp_remetente_nome, smtp_remetente_email,
+        criado_em, atualizado_em, atualizadoporusuarioid
       FROM configuracao_global WHERE id = 1`,
     );
     if (!result.rows[0])
       throw new NotFoundException('Configuração global não encontrada.');
-    return result.rows[0];
+    const configuracao = result.rows[0];
+
+    return configuracao;
   }
 
   /** Valida, atualiza e audita a configuração global sem expor a senha SMTP. */
@@ -33,6 +36,9 @@ export class ConfiguracaoGlobalService {
     organizacaoId: number,
   ): Promise<ConfiguracaoGlobalDto> {
     const dados = this.validar(dto);
+    const senhaCriptografada = dados.smtp_senha
+      ? criptografar(dados.smtp_senha)
+      : null;
     return executarEmTransacao(async (client) => {
       const anteriorResult = await client.query<ConfiguracaoGlobalDto>(
         `SELECT id, nome_aplicacao, email_suporte, smtp_servidor, smtp_porta,
@@ -59,7 +65,7 @@ export class ConfiguracaoGlobalService {
           dados.smtp_servidor,
           dados.smtp_porta,
           dados.smtp_usuario,
-          dados.smtp_senha,
+          senhaCriptografada,
           dados.smtp_remetente_nome,
           dados.smtp_remetente_email,
           usuarioId,

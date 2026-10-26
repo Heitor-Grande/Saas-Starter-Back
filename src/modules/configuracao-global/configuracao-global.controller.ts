@@ -35,6 +35,7 @@ export class ConfiguracaoGlobalController {
           ),
         );
     } catch (error) {
+      console.log(error);
       if (error instanceof NotFoundException)
         return response
           .status(HttpStatus.NOT_FOUND)
@@ -74,6 +75,7 @@ export class ConfiguracaoGlobalController {
           ),
         );
     } catch (error) {
+      console.log(error);
       if (error instanceof BadRequestException)
         return response
           .status(HttpStatus.BAD_REQUEST)
