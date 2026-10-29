@@ -126,7 +126,7 @@ export class CadastroInicialService {
             usuario.email,
             usuario.telefone,
             organizacaoCriada.id,
-            3, // Perfil padrao de usuario responsavel
+            10, // Perfil padrao de usuario responsavel
             usuario.cargo,
             usuario.ativo,
             senhaHash.hash,
