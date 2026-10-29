@@ -12,20 +12,24 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import type { CreatePlanoDto } from './dto/create-plano.dto';
 import type { UpdatePlanoDto } from './dto/update-plano.dto';
 import { PlanosService } from './planos.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizaPlanosAssinaturas')
 @Controller('planos')
 export class PlanosController {
   /** Recebe o serviço responsável pelas operações de planos. */
   constructor(private readonly planosService: PlanosService) {}
 
   /** Cria um plano usando o usuário autenticado para auditoria. */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'CriaPlanosAssinatura')
   @Post('/create')
   async create(
     @Body() body: CreatePlanoDto,
@@ -136,6 +140,7 @@ export class PlanosController {
   }
 
   /** Atualiza um plano usando o usuário autenticado para auditoria. */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaPlanosAssinatura')
   @Put('/update/:id')
   async update(
     @Param('id') id: string,
@@ -185,6 +190,7 @@ export class PlanosController {
   }
 
   /** Exclui um plano usando o usuário autenticado para auditoria. */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'DeletaPlanosAssinatura')
   @Delete('/remove/:id')
   async remove(
     @Param('id') id: string,

@@ -13,17 +13,21 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import type { CreateUsuarioDto, UpdateUsuarioDto } from './dto/usuario.dto';
 import { UsuariosService } from './usuarios.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizarUsuarios')
 @Controller('usuarios')
 export class UsuariosController {
   constructor(private readonly service: UsuariosService) {}
 
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'CriarUsuarios')
   @Post()
   async create(
     @Body() body: CreateUsuarioDto,
@@ -98,6 +102,7 @@ export class UsuariosController {
     }
   }
 
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizarUsuarios')
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -126,6 +131,7 @@ export class UsuariosController {
     }
   }
 
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'DeletarUsuarios')
   @Delete(':id')
   async remove(
     @Param('id') id: string,

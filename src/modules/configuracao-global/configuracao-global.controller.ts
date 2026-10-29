@@ -8,13 +8,16 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import { ConfiguracaoGlobalService } from './configuracao-global.service';
 import type { UpdateConfiguracaoGlobalDto } from './dto/configuracao-global.dto';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizaConfigGlobal')
 @Controller('configuracao-global')
 export class ConfiguracaoGlobalController {
   /** Recebe o serviço responsável pela configuração global. */
@@ -53,6 +56,7 @@ export class ConfiguracaoGlobalController {
   }
 
   /** Atualiza a configuração global de id 1 e registra a auditoria. */
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'AtualizaConfigGlobal')
   @Put()
   async update(
     @Body() body: UpdateConfiguracaoGlobalDto,

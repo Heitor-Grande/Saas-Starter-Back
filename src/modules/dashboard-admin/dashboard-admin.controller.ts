@@ -1,8 +1,10 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Res, SetMetadata } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import { createApiResponse } from '../../util/api-response/api-response';
 import { DashboardAdminService } from './dashboard-admin.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizaDashboardAdmin')
 @Controller('dashboard-admin')
 export class DashboardAdminController {
   /**

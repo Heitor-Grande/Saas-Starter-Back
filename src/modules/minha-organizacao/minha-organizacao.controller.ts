@@ -9,13 +9,16 @@ import {
   Put,
   Req,
   Res,
+  SetMetadata,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { PERMISSAO_NECESSARIA_KEY } from '../../guards/permissao/permissao.guard';
 import type { JwtAuthenticatedRequest } from '../../middleware/jwt-auth/jwt-auth.middleware';
 import { createApiResponse } from '../../util/api-response/api-response';
 import type { UpdateMinhaOrganizacaoDto } from './dto/minha-organizacao.dto';
 import { MinhaOrganizacaoService } from './minha-organizacao.service';
 
+@SetMetadata(PERMISSAO_NECESSARIA_KEY, 'VisualizarOrganização')
 @Controller('minha-organizacao')
 export class MinhaOrganizacaoController {
   constructor(private readonly service: MinhaOrganizacaoService) {}
@@ -43,6 +46,7 @@ export class MinhaOrganizacaoController {
     }
   }
 
+  @SetMetadata(PERMISSAO_NECESSARIA_KEY, 'atualizarOrganização')
   @Put()
   async updateAuthenticated(
     @Body() body: UpdateMinhaOrganizacaoDto,
