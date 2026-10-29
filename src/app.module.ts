@@ -16,6 +16,7 @@ import { ConfiguracaoGlobalModule } from './modules/configuracao-global/configur
 import { DashboardAdminModule } from './modules/dashboard-admin/dashboard-admin.module';
 import { LoginModule } from './modules/login/login.module';
 import { LogModule } from './modules/log/log.module';
+import { MeuUsuarioModule } from './modules/meu-usuario/meu-usuario.module';
 import { OrganizacoesUsuariosModule } from './modules/organizacoes-usuarios/organizacoes-usuarios.module';
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
@@ -46,6 +47,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX);
     DashboardAdminModule,
     LoginModule,
     LogModule,
+    MeuUsuarioModule,
     OrganizacoesUsuariosModule,
     PerfisModule,
     PermissoesModule,
