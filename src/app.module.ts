@@ -17,6 +17,7 @@ import { DashboardAdminModule } from './modules/dashboard-admin/dashboard-admin.
 import { LoginModule } from './modules/login/login.module';
 import { LogModule } from './modules/log/log.module';
 import { MeuUsuarioModule } from './modules/meu-usuario/meu-usuario.module';
+import { MinhaOrganizacaoModule } from './modules/minha-organizacao/minha-organizacao.module';
 import { OrganizacoesUsuariosModule } from './modules/organizacoes-usuarios/organizacoes-usuarios.module';
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
@@ -48,6 +49,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX);
     LoginModule,
     LogModule,
     MeuUsuarioModule,
+    MinhaOrganizacaoModule,
     OrganizacoesUsuariosModule,
     PerfisModule,
     PermissoesModule,
