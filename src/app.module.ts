@@ -22,6 +22,7 @@ import { OrganizacoesUsuariosModule } from './modules/organizacoes-usuarios/orga
 import { PerfisModule } from './modules/perfis/perfis.module';
 import { PermissoesModule } from './modules/permissoes/permissoes.module';
 import { PlanosModule } from './modules/planos/planos.module';
+import { PlanosPublicosModule } from './modules/planos-publicos/planos-publicos.module';
 import { RecuperacaoSenhaModule } from './modules/recuperacao-senha/recuperacao-senha.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 
@@ -56,6 +57,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX);
     PerfisModule,
     PermissoesModule,
     PlanosModule,
+    PlanosPublicosModule,
     RecuperacaoSenhaModule,
     UsuariosModule,
   ],
@@ -91,6 +93,7 @@ export class AppModule implements NestModule {
           method: RequestMethod.POST,
         },
         { path: 'login', method: RequestMethod.POST },
+        { path: 'planos-publicos', method: RequestMethod.GET },
         { path: 'recuperacao-senha/(.*)', method: RequestMethod.POST },
         { path: '/', method: RequestMethod.GET },
       )
