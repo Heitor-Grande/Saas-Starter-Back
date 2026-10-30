@@ -5,11 +5,15 @@ import {
   HttpStatus,
   Post,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { createApiResponse } from '../../util/api-response/api-response';
 import { CadastroInicialService } from './cadastro-inicial.service';
-import type { CreateCadastroInicialDto } from './dto/create-cadastro-inicial.dto';
+import type {
+  ConfirmarEmailCadastroDto,
+  CreateCadastroInicialDto,
+} from './dto/create-cadastro-inicial.dto';
 
 @Controller('cadastro-inicial')
 export class CadastroInicialController {
@@ -28,7 +32,6 @@ export class CadastroInicialController {
    * @param response Resposta HTTP usada para retornar o resultado padronizado.
    * @returns A resposta HTTP com os dados criados ou o erro encontrado.
    */
-  @Post('/create')
   async create(
     @Body() body: CreateCadastroInicialDto,
     @Res() response: Response,
@@ -62,5 +65,72 @@ export class CadastroInicialController {
           ),
         );
     }
+  }
+
+  /** Valida os dados e envia o código sem criar registros no banco. */
+  @Post('/solicitar-confirmacao')
+  async solicitarConfirmacao(
+    @Body() body: CreateCadastroInicialDto,
+    @Res() response: Response,
+  ): Promise<Response> {
+    try {
+      const solicitacao =
+        await this.cadastroInicialService.solicitarConfirmacao(body);
+      return response
+        .status(HttpStatus.OK)
+        .json(
+          createApiResponse(
+            'Código de confirmação enviado para o e-mail informado.',
+            HttpStatus.OK,
+            solicitacao,
+          ),
+        );
+    } catch (error) {
+      return this.responderErro(error, response, 'Erro ao enviar confirmação.');
+    }
+  }
+
+  /** Confirma o código e somente então cria a organização e o usuário. */
+  @Post('/confirmar-email')
+  async confirmarEmail(
+    @Body() body: ConfirmarEmailCadastroDto,
+    @Res() response: Response,
+  ): Promise<Response> {
+    try {
+      const cadastro = await this.cadastroInicialService.confirmarEmail(body);
+      return response
+        .status(HttpStatus.CREATED)
+        .json(
+          createApiResponse(
+            'E-mail confirmado e cadastro realizado com sucesso.',
+            HttpStatus.CREATED,
+            cadastro,
+          ),
+        );
+    } catch (error) {
+      return this.responderErro(error, response, 'Erro ao confirmar cadastro.');
+    }
+  }
+
+  private responderErro(
+    error: unknown,
+    response: Response,
+    mensagem: string,
+  ): Response {
+    if (error instanceof BadRequestException) {
+      return response
+        .status(HttpStatus.BAD_REQUEST)
+        .json(createApiResponse(error.message, HttpStatus.BAD_REQUEST, null));
+    }
+    if (error instanceof UnauthorizedException) {
+      return response
+        .status(HttpStatus.UNAUTHORIZED)
+        .json(createApiResponse(error.message, HttpStatus.UNAUTHORIZED, null));
+    }
+    return response
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json(
+        createApiResponse(mensagem, HttpStatus.INTERNAL_SERVER_ERROR, null),
+      );
   }
 }

@@ -53,3 +53,14 @@ export type CadastroInicialDto = {
   organizacao: CadastroInicialOrganizacaoDto;
   usuario: CadastroInicialUsuarioDto;
 };
+
+export type ConfirmarEmailCadastroDto = {
+  token: string;
+  codigo: string;
+  cadastro: CreateCadastroInicialDto;
+};
+
+export type SolicitacaoConfirmacaoCadastroDto = {
+  token: string;
+  expiraEmSegundos: number;
+};

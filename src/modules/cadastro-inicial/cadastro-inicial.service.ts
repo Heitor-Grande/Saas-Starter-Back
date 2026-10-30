@@ -1,17 +1,98 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { generateHash } from '../../util/bcrypt/bcrypt';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { createHash, randomInt } from 'node:crypto';
+import type { JwtPayload as JsonWebTokenPayload } from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
+import { postgresPool } from '../../shared/infrastructure/database/postgres/postgres';
+import { generateHash, validateHash } from '../../util/bcrypt/bcrypt';
 import { criarLog } from '../../util/criar-log/criar-log';
 import { executarEmTransacao } from '../../util/executar-em-transacao/executar-em-transacao';
+import { signJwtPayload, verifyJwtPayload } from '../../util/jwt/jwt';
+import { descriptografar } from '../../util/nodeCrypto/nodeCrypto';
 import { validarForcaSenha } from '../../util/validar-forca-senha/validar-forca-senha';
 import type {
   CadastroInicialDto,
   CadastroInicialOrganizacaoDto,
   CadastroInicialUsuarioDto,
   CreateCadastroInicialDto,
+  ConfirmarEmailCadastroDto,
+  SolicitacaoConfirmacaoCadastroDto,
 } from './dto/create-cadastro-inicial.dto';
+
+type TokenConfirmacaoCadastro = JsonWebTokenPayload & {
+  finalidade: 'confirmacao-cadastro';
+  codigoHash: string;
+  cadastroHash: string;
+};
+
+type ConfiguracaoSmtp = {
+  nome_aplicacao: string;
+  smtp_servidor: string | null;
+  smtp_porta: number | null;
+  smtp_usuario: string | null;
+  smtp_senha: string | null;
+  smtp_remetente_nome: string | null;
+  smtp_remetente_email: string | null;
+};
 
 @Injectable()
 export class CadastroInicialService {
+  private readonly validadeConfirmacaoSegundos = Math.max(
+    60,
+    Number(process.env.CADASTRO_EMAIL_JWT_EXPIRES_IN_SECONDS) || 600,
+  );
+
+  /** Valida o cadastro, verifica duplicidades e envia o código de confirmação. */
+  async solicitarConfirmacao(
+    dto: CreateCadastroInicialDto,
+  ): Promise<SolicitacaoConfirmacaoCadastroDto> {
+    const cadastroNormalizado = this.normalizarCadastro(dto);
+    await this.validarDuplicidade(cadastroNormalizado);
+    const codigo = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    const codigoHash = generateHash(codigo, this.obterSaltRounds()).hash;
+    const token = signJwtPayload<TokenConfirmacaoCadastro>(
+      {
+        finalidade: 'confirmacao-cadastro',
+        codigoHash,
+        cadastroHash: this.hashCadastro(cadastroNormalizado),
+      },
+      this.validadeConfirmacaoSegundos,
+    );
+
+    await this.enviarCodigo(cadastroNormalizado.usuario.email, codigo);
+    return { token, expiraEmSegundos: this.validadeConfirmacaoSegundos };
+  }
+
+  /** Confere código e integridade dos dados antes de executar a criação. */
+  async confirmarEmail(
+    dto: ConfirmarEmailCadastroDto,
+  ): Promise<CadastroInicialDto> {
+    const payload = dto?.token
+      ? verifyJwtPayload<TokenConfirmacaoCadastro>(dto.token)
+      : null;
+    const codigo = dto?.codigo?.trim();
+    if (
+      !payload ||
+      payload.finalidade !== 'confirmacao-cadastro' ||
+      !/^\d{6}$/.test(codigo || '') ||
+      !validateHash(codigo!, payload.codigoHash)
+    ) {
+      throw new UnauthorizedException('Código inválido ou expirado.');
+    }
+
+    const cadastroNormalizado = this.normalizarCadastro(dto.cadastro);
+    if (this.hashCadastro(cadastroNormalizado) !== payload.cadastroHash) {
+      throw new UnauthorizedException(
+        'Os dados do cadastro foram alterados. Solicite um novo código.',
+      );
+    }
+    await this.validarDuplicidade(cadastroNormalizado);
+    return this.create(cadastroNormalizado);
+  }
+
   /**
    * Valida, cria a organizacao inicial e vincula o primeiro usuario responsavel.
    * @param dto Dados da organizacao e do usuario responsavel recebidos na requisicao.
@@ -192,6 +273,81 @@ export class CadastroInicialService {
 
       throw error;
     }
+  }
+
+  private normalizarCadastro(
+    dto: CreateCadastroInicialDto,
+  ): CreateCadastroInicialDto {
+    const organizacao = this.validarOrganizacao(dto?.organizacao);
+    const usuario = this.validarUsuario(dto?.usuario);
+    return { organizacao, usuario: { ...usuario, senha: dto.usuario.senha } };
+  }
+
+  private hashCadastro(dto: CreateCadastroInicialDto): string {
+    return createHash('sha256').update(JSON.stringify(dto)).digest('base64url');
+  }
+
+  private async validarDuplicidade(
+    dto: CreateCadastroInicialDto,
+  ): Promise<void> {
+    const result = await postgresPool.query(
+      `SELECT 1
+       WHERE EXISTS (SELECT 1 FROM organizacoes WHERE cnpj = $1)
+          OR EXISTS (SELECT 1 FROM usuarios WHERE cpf = $2 OR email = $3)
+       LIMIT 1`,
+      [dto.organizacao.cnpj, dto.usuario.cpf, dto.usuario.email],
+    );
+    if (result.rowCount) {
+      throw new BadRequestException(
+        'Já existe um cadastro com CNPJ, CPF ou e-mail informado.',
+      );
+    }
+  }
+
+  private async enviarCodigo(email: string, codigo: string): Promise<void> {
+    const result = await postgresPool.query<ConfiguracaoSmtp>(
+      `SELECT nome_aplicacao, smtp_servidor, smtp_porta, smtp_usuario,
+        smtp_senha, smtp_remetente_nome, smtp_remetente_email
+       FROM configuracao_global WHERE id = 1`,
+    );
+    const config = result.rows[0];
+    if (
+      !config?.smtp_servidor ||
+      !config.smtp_porta ||
+      !config.smtp_usuario ||
+      !config.smtp_senha ||
+      !config.smtp_remetente_email
+    ) {
+      throw new Error('Configuração SMTP incompleta.');
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: config.smtp_servidor,
+      port: config.smtp_porta,
+      secure: config.smtp_porta === 465,
+      auth: {
+        user: config.smtp_usuario,
+        pass: descriptografar(config.smtp_senha),
+      },
+    });
+    await transporter.sendMail({
+      from: {
+        name: config.smtp_remetente_nome || config.nome_aplicacao,
+        address: config.smtp_remetente_email,
+      },
+      to: email,
+      subject: `${codigo} é o seu código de confirmação`,
+      text: `Seu código de confirmação de cadastro é ${codigo}. Ele expira em ${Math.ceil(this.validadeConfirmacaoSegundos / 60)} minutos.`,
+      html: `<p>Seu código de confirmação de cadastro é:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${codigo}</p><p>Ele expira em ${Math.ceil(this.validadeConfirmacaoSegundos / 60)} minutos.</p>`,
+    });
+  }
+
+  private obterSaltRounds(): number {
+    const rounds = Number(process.env.BCRYPT_SALT_ROUNDS);
+    if (!Number.isInteger(rounds) || rounds < 4 || rounds > 15) {
+      throw new Error('BCRYPT_SALT_ROUNDS deve ser um número entre 4 e 15.');
+    }
+    return rounds;
   }
 
   /**

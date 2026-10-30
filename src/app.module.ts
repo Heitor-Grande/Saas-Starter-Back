@@ -82,7 +82,14 @@ export class AppModule implements NestModule {
     consumer
       .apply(JwtAuthMiddleware)
       .exclude(
-        { path: 'cadastro-inicial/create', method: RequestMethod.POST },
+        {
+          path: 'cadastro-inicial/solicitar-confirmacao',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'cadastro-inicial/confirmar-email',
+          method: RequestMethod.POST,
+        },
         { path: 'login', method: RequestMethod.POST },
         { path: 'recuperacao-senha/(.*)', method: RequestMethod.POST },
         { path: '/', method: RequestMethod.GET },
