@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { decode, sign, verify } from 'jsonwebtoken';
+import type { JwtPayload as JsonWebTokenPayload } from 'jsonwebtoken';
 
 const jwtSecret = process.env.JWT_SECRET as string;
 
@@ -53,4 +54,24 @@ export function getJwtPayload(token: string): JwtPayload | null {
   return payload !== null && typeof payload === 'object'
     ? (payload as JwtPayload)
     : null;
+}
+
+/** Valida a assinatura e devolve o payload de tokens de finalidade específica. */
+export function verifyJwtPayload<T extends JsonWebTokenPayload>(
+  token: string,
+): T | null {
+  try {
+    const payload = verify(token, jwtSecret);
+    return typeof payload === 'object' ? (payload as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Assina um payload de finalidade específica com expiração obrigatória. */
+export function signJwtPayload<T extends object>(
+  payload: T,
+  expiresInSeconds: number,
+): string {
+  return sign(payload, jwtSecret, { expiresIn: expiresInSeconds });
 }
